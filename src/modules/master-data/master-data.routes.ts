@@ -1,6 +1,10 @@
 import express from "express";
 import { body } from "express-validator";
-import { requireAuth, requireRole, validateRequest } from "../../common/middlewares";
+import {
+  requireAuth,
+  requireRole,
+  validateRequest,
+} from "../../common/middlewares";
 import * as ctrl from "./master-data.controller";
 import * as svc from "./master-data.service";
 
@@ -9,22 +13,43 @@ const router = express.Router();
 // ───────────── Locations ─────────────
 router.get("/locations", requireAuth, ctrl.getLocations);
 router.get("/locations/cities", requireAuth, ctrl.getCities);
-router.get("/locations/:city/localities", requireAuth, ctrl.getLocalitiesByCity);
+router.get(
+  "/locations/:city/localities",
+  requireAuth,
+  ctrl.getLocalitiesByCity,
+);
 
 router.post(
   "/locations",
   requireAuth,
   requireRole("super_admin"),
-  [body("state").notEmpty(), body("city").notEmpty(), body("locality").notEmpty()],
+  [
+    body("state").notEmpty(),
+    body("city").notEmpty(),
+    body("locality").notEmpty(),
+  ],
   validateRequest,
   ctrl.createLocation,
 );
 
-router.patch("/locations/:id", requireAuth, requireRole("super_admin"), ctrl.updateLocation);
-router.delete("/locations/:id", requireAuth, requireRole("super_admin"), ctrl.deleteLocation);
+router.patch(
+  "/locations/:id",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.updateLocation,
+);
+router.delete(
+  "/locations/:id",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.deleteLocation,
+);
 
 // ───────────── Simple resources: industries, functions, skills, languages ─────────────
-const simpleResources: [string, ReturnType<typeof ctrl.makeSimpleResourceHandlers>][] = [
+const simpleResources: [
+  string,
+  ReturnType<typeof ctrl.makeSimpleResourceHandlers>,
+][] = [
   ["industries", ctrl.makeSimpleResourceHandlers(svc.industries)],
   ["functions", ctrl.makeSimpleResourceHandlers(svc.functions)],
   ["skills", ctrl.makeSimpleResourceHandlers(svc.skills)],
@@ -43,8 +68,18 @@ for (const [path, handlers] of simpleResources) {
     handlers.create,
   );
 
-  router.patch(`/${path}/:id`, requireAuth, requireRole("super_admin"), handlers.update);
-  router.delete(`/${path}/:id`, requireAuth, requireRole("super_admin"), handlers.remove);
+  router.patch(
+    `/${path}/:id`,
+    requireAuth,
+    requireRole("super_admin"),
+    handlers.update,
+  );
+  router.delete(
+    `/${path}/:id`,
+    requireAuth,
+    requireRole("super_admin"),
+    handlers.remove,
+  );
 }
 
 // ───────────── Job roles ─────────────
@@ -59,8 +94,18 @@ router.post(
   ctrl.createJobRole,
 );
 
-router.patch("/job-roles/:id", requireAuth, requireRole("super_admin"), ctrl.updateJobRole);
-router.delete("/job-roles/:id", requireAuth, requireRole("super_admin"), ctrl.deleteJobRole);
+router.patch(
+  "/job-roles/:id",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.updateJobRole,
+);
+router.delete(
+  "/job-roles/:id",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.deleteJobRole,
+);
 
 // ───────────── Qualifications ─────────────
 router.get("/qualifications", requireAuth, ctrl.getQualifications);

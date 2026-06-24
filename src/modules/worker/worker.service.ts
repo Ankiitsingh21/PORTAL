@@ -21,12 +21,27 @@ export const getOwnProfile = async (userId: string) => {
 // preferredIndustryIds) are now junction tables and go through the
 // dedicated replace* repo methods below instead of a plain column update.
 const SCALAR_FIELDS = [
-  "name", "phone", "dob", "gender", "city", "currentLocality",
-  "profilePhotoUrl", "headline", "summary", "totalExperienceMonths",
-  "expectedSalaryMin", "expectedSalaryMax", "jobType", "availability", "resumeUrl",
+  "name",
+  "phone",
+  "dob",
+  "gender",
+  "city",
+  "currentLocality",
+  "profilePhotoUrl",
+  "headline",
+  "summary",
+  "totalExperienceMonths",
+  "expectedSalaryMin",
+  "expectedSalaryMax",
+  "jobType",
+  "availability",
+  "resumeUrl",
 ];
 
-export const updateProfile = async (userId: string, body: Record<string, any>) => {
+export const updateProfile = async (
+  userId: string,
+  body: Record<string, any>,
+) => {
   const profile = await repo.findByUserId(userId);
   if (!profile) throw new NotFoundError("Profile not found — create it first");
 
@@ -45,12 +60,22 @@ export const updateProfile = async (userId: string, body: Record<string, any>) =
   // ({ languageId, proficiency? }[]) — proficiency is a new optional field
   // on the junction table that didn't exist on the old Int[] column.
   if (body.languages) await repo.replaceLanguages(profile.id, body.languages);
-  if (body.preferredLocationIds) await repo.replacePreferredLocations(profile.id, body.preferredLocationIds);
-  if (body.preferredIndustryIds) await repo.replacePreferredIndustries(profile.id, body.preferredIndustryIds);
+  if (body.preferredLocationIds)
+    await repo.replacePreferredLocations(profile.id, body.preferredLocationIds);
+  if (body.preferredIndustryIds)
+    await repo.replacePreferredIndustries(
+      profile.id,
+      body.preferredIndustryIds,
+    );
 
   let updated = await repo.findByUserIdFull(userId);
 
-  const isComplete = !!(updated!.name && updated!.phone && updated!.resumeUrl && updated!.skills.length);
+  const isComplete = !!(
+    updated!.name &&
+    updated!.phone &&
+    updated!.resumeUrl &&
+    updated!.skills.length
+  );
   if (isComplete !== updated!.profileComplete) {
     await repo.setProfileComplete(userId, isComplete);
     updated = await repo.findByUserIdFull(userId);
@@ -69,10 +94,19 @@ export const addEducation = async (
 ) => {
   const profile = await repo.findByUserId(userId);
   if (!profile) throw new NotFoundError("Profile not found — create it first");
-  return repo.addEducation(profile.id, { qualificationId, institute, passoutYear, score });
+  return repo.addEducation(profile.id, {
+    qualificationId,
+    institute,
+    passoutYear,
+    score,
+  });
 };
 
-export const updateEducation = async (userId: string, educationId: string, data: any) => {
+export const updateEducation = async (
+  userId: string,
+  educationId: string,
+  data: any,
+) => {
   const profile = await repo.findByUserId(userId);
   if (!profile) throw new NotFoundError("Profile not found");
 
@@ -116,7 +150,11 @@ export const addExperience = async (
   });
 };
 
-export const updateExperience = async (userId: string, experienceId: string, data: any) => {
+export const updateExperience = async (
+  userId: string,
+  experienceId: string,
+  data: any,
+) => {
   const profile = await repo.findByUserId(userId);
   if (!profile) throw new NotFoundError("Profile not found");
 
@@ -129,7 +167,10 @@ export const updateExperience = async (userId: string, experienceId: string, dat
   return repo.updateExperience(experienceId, data);
 };
 
-export const deleteExperience = async (userId: string, experienceId: string) => {
+export const deleteExperience = async (
+  userId: string,
+  experienceId: string,
+) => {
   const profile = await repo.findByUserId(userId);
   if (!profile) throw new NotFoundError("Profile not found");
 
@@ -160,7 +201,9 @@ export const searchWorkers = async (
     // A recruiter with zero assigned categories sees zero workers, rather
     // than an unfiltered `in: []` which Prisma/Postgres would otherwise
     // treat as "match nothing" anyway — `-1` just makes that explicit.
-    where.preferredIndustries = { some: { industryId: { in: industryIds.length ? industryIds : [-1] } } };
+    where.preferredIndustries = {
+      some: { industryId: { in: industryIds.length ? industryIds : [-1] } },
+    };
   }
 
   return repo.searchWorkers(where);

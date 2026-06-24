@@ -1,5 +1,9 @@
 import { JobRepository } from "./job.repository";
-import { BadRequestError, ForbiddenError, NotFoundError } from "../../common/errors";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from "../../common/errors";
 
 const repo = new JobRepository();
 
@@ -9,19 +13,44 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   closed: [],
 };
 
-export const createJob = async (postedBy: string, body: Record<string, any>) => {
+export const createJob = async (
+  postedBy: string,
+  body: Record<string, any>,
+) => {
   const {
-    title, description, industryId, functionId, jobRoleId, locationId,
-    wageMin, wageMax, wageType, shiftType, jobType,
-    headcountRequired, minExperienceMonths, skillIds, qualificationIds,
+    title,
+    description,
+    industryId,
+    functionId,
+    jobRoleId,
+    locationId,
+    wageMin,
+    wageMax,
+    wageType,
+    shiftType,
+    jobType,
+    headcountRequired,
+    minExperienceMonths,
+    skillIds,
+    qualificationIds,
   } = body;
 
   return repo.create(postedBy, {
-    title, description, industryId, functionId, jobRoleId, locationId,
-    wageMin, wageMax, wageType, shiftType, jobType,
+    title,
+    description,
+    industryId,
+    functionId,
+    jobRoleId,
+    locationId,
+    wageMin,
+    wageMax,
+    wageType,
+    shiftType,
+    jobType,
     headcountRequired,
     minExperienceMonths: minExperienceMonths ?? 0,
-    skillIds, qualificationIds,
+    skillIds,
+    qualificationIds,
   });
 };
 
@@ -41,14 +70,21 @@ export const getJob = async (id: string) => {
   return job;
 };
 
-const assertOwnerOrAdmin = (job: { postedBy: string }, currentUser: { id: string; role: string }) => {
+const assertOwnerOrAdmin = (
+  job: { postedBy: string },
+  currentUser: { id: string; role: string },
+) => {
   if (currentUser.role === "super_admin") return;
   if (job.postedBy !== currentUser.id) {
     throw new ForbiddenError("You can only modify jobs you posted");
   }
 };
 
-export const updateJob = async (id: string, currentUser: { id: string; role: string }, data: Record<string, any>) => {
+export const updateJob = async (
+  id: string,
+  currentUser: { id: string; role: string },
+  data: Record<string, any>,
+) => {
   const job = await getJob(id);
   assertOwnerOrAdmin(job, currentUser);
   return repo.update(id, data);
@@ -64,7 +100,9 @@ export const updateJobStatus = async (
 
   const allowed = ALLOWED_TRANSITIONS[job.status];
   if (!allowed.includes(newStatus)) {
-    throw new BadRequestError(`Cannot move job from ${job.status} to ${newStatus}`);
+    throw new BadRequestError(
+      `Cannot move job from ${job.status} to ${newStatus}`,
+    );
   }
 
   const updated = await repo.updateStatus(id, newStatus);
@@ -79,26 +117,41 @@ export const updateJobStatus = async (
   return updated;
 };
 
-export const deleteJob = async (id: string, currentUser: { id: string; role: string }) => {
+export const deleteJob = async (
+  id: string,
+  currentUser: { id: string; role: string },
+) => {
   const job = await getJob(id);
   assertOwnerOrAdmin(job, currentUser);
 
   if (job.status !== "draft") {
-    throw new BadRequestError("Only draft jobs can be deleted — close active jobs instead");
+    throw new BadRequestError(
+      "Only draft jobs can be deleted — close active jobs instead",
+    );
   }
 
   await repo.delete(id);
   return { deleted: true };
 };
 
-export const assignJobToRecruiter = async (id: string, newRecruiterUserId: string) => {
+export const assignJobToRecruiter = async (
+  id: string,
+  newRecruiterUserId: string,
+) => {
   await getJob(id);
   return repo.reassign(id, newRecruiterUserId);
 };
 
-export const listJobsByRecruiter = (postedBy: string) => repo.listByPoster(postedBy);
+export const listJobsByRecruiter = (postedBy: string) =>
+  repo.listByPoster(postedBy);
 
-export const isRecruiterAssignedToIndustry = async (recruiterUserId: string, industryId: number) => {
-  const row = await repo.isRecruiterAssignedToIndustry(recruiterUserId, industryId);
+export const isRecruiterAssignedToIndustry = async (
+  recruiterUserId: string,
+  industryId: number,
+) => {
+  const row = await repo.isRecruiterAssignedToIndustry(
+    recruiterUserId,
+    industryId,
+  );
   return !!row;
 };

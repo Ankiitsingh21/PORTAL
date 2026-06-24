@@ -8,7 +8,9 @@ import applicationRoutes from "../modules/application/application.routes";
 
 const router = express.Router();
 
-router.get("/health", (req: Request, res: Response) => res.send({ date: new Date() }));
+router.get("/health", (req: Request, res: Response) =>
+  res.send({ date: new Date() }),
+);
 
 router.use("/auth", authRoutes);
 router.use("/admin", adminRoutes);

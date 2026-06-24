@@ -7,7 +7,10 @@ export class AdminRepository {
   // Runs inside the createRecruiter transaction in admin.service.ts —
   // this is the one User row that used to require an HTTP call to
   // Auth Service in the microservices version.
-  createUserForRecruiter(tx: Tx, data: { email: string; passwordHash: string }) {
+  createUserForRecruiter(
+    tx: Tx,
+    data: { email: string; passwordHash: string },
+  ) {
     return tx.user.create({
       data: { ...data, role: "recruiter", phoneVerified: true },
     });
@@ -15,7 +18,13 @@ export class AdminRepository {
 
   createRecruiterProfile(
     tx: Tx,
-    data: { userId: string; name: string; email: string; createdById: string; industryIds: number[] },
+    data: {
+      userId: string;
+      name: string;
+      email: string;
+      createdById: string;
+      industryIds: number[];
+    },
   ) {
     return tx.recruiter.create({
       data: {
@@ -23,7 +32,9 @@ export class AdminRepository {
         name: data.name,
         email: data.email,
         createdById: data.createdById,
-        categories: { create: data.industryIds.map((industryId) => ({ industryId })) },
+        categories: {
+          create: data.industryIds.map((industryId) => ({ industryId })),
+        },
       },
       include: { categories: { include: { industry: true } } },
     });
@@ -43,7 +54,10 @@ export class AdminRepository {
     });
   }
 
-  updateRecruiterInfo(id: string, data: Partial<{ name: string; email: string }>) {
+  updateRecruiterInfo(
+    id: string,
+    data: Partial<{ name: string; email: string }>,
+  ) {
     return prisma.recruiter.update({ where: { id }, data });
   }
 
@@ -62,8 +76,14 @@ export class AdminRepository {
   // could still log in. One DB means this gap is now closed for real.
   setRecruiterActive(id: string, isActive: boolean) {
     return prisma.$transaction(async (tx) => {
-      const recruiter = await tx.recruiter.update({ where: { id }, data: { isActive } });
-      await tx.user.update({ where: { id: recruiter.userId }, data: { isActive } });
+      const recruiter = await tx.recruiter.update({
+        where: { id },
+        data: { isActive },
+      });
+      await tx.user.update({
+        where: { id: recruiter.userId },
+        data: { isActive },
+      });
       return recruiter;
     });
   }

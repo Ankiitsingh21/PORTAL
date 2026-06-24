@@ -1,6 +1,10 @@
 import express from "express";
 import { body } from "express-validator";
-import { requireAuth, requireRole, validateRequest } from "../../common/middlewares";
+import {
+  requireAuth,
+  requireRole,
+  validateRequest,
+} from "../../common/middlewares";
 import * as ctrl from "./application.controller";
 
 const router = express.Router();
@@ -34,12 +38,24 @@ router.patch(
   "/:id/status",
   requireAuth,
   requireRole("recruiter", "super_admin"),
-  [body("status").isIn(["shortlisted", "interview_scheduled", "hired", "rejected"])],
+  [
+    body("status").isIn([
+      "shortlisted",
+      "interview_scheduled",
+      "hired",
+      "rejected",
+    ]),
+  ],
   validateRequest,
   ctrl.updateStatus,
 );
 
-router.delete("/:id", requireAuth, requireRole("worker"), ctrl.withdrawApplication);
+router.delete(
+  "/:id",
+  requireAuth,
+  requireRole("worker"),
+  ctrl.withdrawApplication,
+);
 
 // NOTE: the old `/internal/by-jobs` and `/internal/by-recruiter/:id`
 // routes are gone — Admin Service used these for reporting over HTTP.

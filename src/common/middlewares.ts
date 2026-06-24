@@ -9,7 +9,11 @@ import {
 } from "./errors";
 import { UserPayload } from "./types";
 
-export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+export const requireAuth = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const token = req.session?.jwt;
   if (!token) {
     throw new NotAuthorizedError();
@@ -25,13 +29,19 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
 export const requireRole = (...roles: UserPayload["role"][]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.currentUser || !roles.includes(req.currentUser.role)) {
-      throw new ForbiddenError(`Only ${roles.join(" or ")} can perform this action`);
+      throw new ForbiddenError(
+        `Only ${roles.join(" or ")} can perform this action`,
+      );
     }
     next();
   };
 };
 
-export const validateRequest = (req: Request, res: Response, next: NextFunction) => {
+export const validateRequest = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new RequestValidationError(errors.array());

@@ -1,6 +1,10 @@
 import express from "express";
 import { body } from "express-validator";
-import { requireAuth, requireRole, validateRequest } from "../../common/middlewares";
+import {
+  requireAuth,
+  requireRole,
+  validateRequest,
+} from "../../common/middlewares";
 import { categoryGuard } from "./job.middlewares";
 import * as ctrl from "./job.controller";
 
@@ -23,13 +27,28 @@ router.post(
 );
 
 // ───────────── List (role-aware) ─────────────
-router.get("/", requireAuth, requireRole("worker", "recruiter", "super_admin"), ctrl.listJobs);
+router.get(
+  "/",
+  requireAuth,
+  requireRole("worker", "recruiter", "super_admin"),
+  ctrl.listJobs,
+);
 
 // ───────────── Single job ─────────────
-router.get("/:id", requireAuth, requireRole("worker", "recruiter", "super_admin"), ctrl.getJob);
+router.get(
+  "/:id",
+  requireAuth,
+  requireRole("worker", "recruiter", "super_admin"),
+  ctrl.getJob,
+);
 
 // ───────────── Edit (owner recruiter or admin) ─────────────
-router.patch("/:id", requireAuth, requireRole("recruiter", "super_admin"), ctrl.updateJob);
+router.patch(
+  "/:id",
+  requireAuth,
+  requireRole("recruiter", "super_admin"),
+  ctrl.updateJob,
+);
 
 // ───────────── Status transitions ─────────────
 router.patch(
@@ -42,7 +61,12 @@ router.patch(
 );
 
 // ───────────── Delete (draft only) ─────────────
-router.delete("/:id", requireAuth, requireRole("recruiter", "super_admin"), ctrl.deleteJob);
+router.delete(
+  "/:id",
+  requireAuth,
+  requireRole("recruiter", "super_admin"),
+  ctrl.deleteJob,
+);
 
 // ───────────── Admin reassigns job to a different recruiter ─────────────
 router.patch(

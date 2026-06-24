@@ -1,5 +1,9 @@
 import { ApplicationRepository } from "./application.repository";
-import { BadRequestError, ForbiddenError, NotFoundError } from "../../common/errors";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from "../../common/errors";
 import * as jobService from "../job/job.service";
 import { sendEmail } from "../notification/email.service";
 
@@ -13,38 +17,70 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   rejected: [],
 };
 
-export const applyToJob = async (workerId: string, jobId: string, coverNote?: string) => {
+export const applyToJob = async (
+  workerId: string,
+  jobId: string,
+  coverNote?: string,
+) => {
   const existing = await repo.findByJobAndWorker(jobId, workerId);
-  if (existing) throw new BadRequestError("You have already applied to this job");
+  if (existing)
+    throw new BadRequestError("You have already applied to this job");
 
   // Was an axios.get() to Job Service over HTTP — now a direct call into
   // job.service, in the same process, same transaction boundary if needed.
   const job = await jobService.getJob(jobId);
-  if (job.status !== "active") throw new BadRequestError("This job is not accepting applications");
+  if (job.status !== "active")
+    throw new BadRequestError("This job is not accepting applications");
 
-  const application = await repo.create({ jobId, workerId, recruiterId: job.postedBy, coverNote });
-  await repo.addHistory({ applicationId: application.id, toStatus: "applied", changedById: workerId });
+  const application = await repo.create({
+    jobId,
+    workerId,
+    recruiterId: job.postedBy,
+    coverNote,
+  });
+  await repo.addHistory({
+    applicationId: application.id,
+    toStatus: "applied",
+    changedById: workerId,
+  });
 
   return application;
 };
 
-export const listMyApplications = (workerId: string) => repo.listByWorker(workerId);
+export const listMyApplications = (workerId: string) =>
+  repo.listByWorker(workerId);
 
-export const listApplicationsForJob = async (jobId: string, currentUser: { id: string; role: string }) => {
+export const listApplicationsForJob = async (
+  jobId: string,
+  currentUser: { id: string; role: string },
+) => {
   const apps = await repo.listByJob(jobId);
-  if (apps.length && currentUser.role !== "super_admin" && apps[0].recruiterId !== currentUser.id) {
-    throw new ForbiddenError("You can only view applicants for jobs you posted");
+  if (
+    apps.length &&
+    currentUser.role !== "super_admin" &&
+    apps[0].recruiterId !== currentUser.id
+  ) {
+    throw new ForbiddenError(
+      "You can only view applicants for jobs you posted",
+    );
   }
   return apps;
 };
 
-export const getApplication = async (id: string, currentUser: { id: string; role: string }) => {
+export const getApplication = async (
+  id: string,
+  currentUser: { id: string; role: string },
+) => {
   const app = await repo.findById(id);
   if (!app) throw new NotFoundError("Application not found");
 
   const isOwnerWorker = app.workerId === currentUser.id;
   const isOwnerRecruiter = app.recruiterId === currentUser.id;
-  if (!isOwnerWorker && !isOwnerRecruiter && currentUser.role !== "super_admin") {
+  if (
+    !isOwnerWorker &&
+    !isOwnerRecruiter &&
+    currentUser.role !== "super_admin"
+  ) {
     throw new ForbiddenError("Not authorized to view this application");
   }
 
@@ -60,13 +96,20 @@ export const updateStatus = async (
   const app = await repo.findById(id);
   if (!app) throw new NotFoundError("Application not found");
 
-  if (currentUser.role !== "super_admin" && app.recruiterId !== currentUser.id) {
-    throw new ForbiddenError("You can only update applications for jobs you posted");
+  if (
+    currentUser.role !== "super_admin" &&
+    app.recruiterId !== currentUser.id
+  ) {
+    throw new ForbiddenError(
+      "You can only update applications for jobs you posted",
+    );
   }
 
   const allowed = ALLOWED_TRANSITIONS[app.status];
   if (!allowed.includes(newStatus)) {
-    throw new BadRequestError(`Cannot move application from ${app.status} to ${newStatus}`);
+    throw new BadRequestError(
+      `Cannot move application from ${app.status} to ${newStatus}`,
+    );
   }
 
   const updated = await repo.update(id, { status: newStatus as any });
@@ -97,9 +140,12 @@ export const updateStatus = async (
 export const withdrawApplication = async (id: string, workerId: string) => {
   const app = await repo.findByIdBasic(id);
   if (!app) throw new NotFoundError("Application not found");
-  if (app.workerId !== workerId) throw new ForbiddenError("Not your application");
+  if (app.workerId !== workerId)
+    throw new ForbiddenError("Not your application");
   if (app.status !== "applied") {
-    throw new BadRequestError("Can only withdraw applications still in 'applied' status");
+    throw new BadRequestError(
+      "Can only withdraw applications still in 'applied' status",
+    );
   }
 
   await repo.delete(id);
@@ -108,4 +154,5 @@ export const withdrawApplication = async (id: string, workerId: string) => {
 
 // ───────────── For Admin reporting ─────────────
 export const listByJobIds = (jobIds: string[]) => repo.listByJobIds(jobIds);
-export const listByRecruiter = (recruiterId: string) => repo.listByRecruiter(recruiterId);
+export const listByRecruiter = (recruiterId: string) =>
+  repo.listByRecruiter(recruiterId);

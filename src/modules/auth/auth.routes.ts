@@ -10,8 +10,14 @@ router.post(
   "/worker/register",
   [
     body("email").isEmail().withMessage("Valid email required"),
-    body("password").trim().isLength({ min: 6 }).withMessage("Password must be 6+ chars"),
-    body("phone").trim().isLength({ min: 10, max: 15 }).withMessage("Valid phone required"),
+    body("password")
+      .trim()
+      .isLength({ min: 6 })
+      .withMessage("Password must be 6+ chars"),
+    body("phone")
+      .trim()
+      .isLength({ min: 10, max: 15 })
+      .withMessage("Valid phone required"),
   ],
   validateRequest,
   ctrl.registerWorker,

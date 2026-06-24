@@ -10,7 +10,8 @@ function buildSimpleResourceRepo(modelName: SimpleModel) {
     create: (name: string) => model.create({ data: { name } }),
     update: (id: number, data: Partial<{ name: string; isActive: boolean }>) =>
       model.update({ where: { id }, data }),
-    deactivate: (id: number) => model.update({ where: { id }, data: { isActive: false } }),
+    deactivate: (id: number) =>
+      model.update({ where: { id }, data: { isActive: false } }),
   };
 }
 
@@ -27,7 +28,11 @@ export class MasterDataRepository {
 
   listCities() {
     return prisma.location
-      .findMany({ where: { isActive: true }, select: { city: true }, distinct: ["city"] })
+      .findMany({
+        where: { isActive: true },
+        select: { city: true },
+        distinct: ["city"],
+      })
       .then((rows) => rows.map((r) => r.city));
   }
 
@@ -41,7 +46,12 @@ export class MasterDataRepository {
 
   updateLocation(
     id: number,
-    data: Partial<{ state: string; city: string; locality: string; isActive: boolean }>,
+    data: Partial<{
+      state: string;
+      city: string;
+      locality: string;
+      isActive: boolean;
+    }>,
   ) {
     return prisma.location.update({ where: { id }, data });
   }
@@ -61,7 +71,10 @@ export class MasterDataRepository {
     return prisma.jobRole.create({ data: { name, functionId } });
   }
 
-  updateJobRole(id: number, data: Partial<{ name: string; functionId: number; isActive: boolean }>) {
+  updateJobRole(
+    id: number,
+    data: Partial<{ name: string; functionId: number; isActive: boolean }>,
+  ) {
     return prisma.jobRole.update({ where: { id }, data });
   }
 

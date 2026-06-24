@@ -32,9 +32,15 @@ export class JobRepository {
       data: {
         ...rest,
         postedBy,
-        skills: skillIds ? { create: skillIds.map((skillId) => ({ skillId })) } : undefined,
+        skills: skillIds
+          ? { create: skillIds.map((skillId) => ({ skillId })) }
+          : undefined,
         qualifications: qualificationIds
-          ? { create: qualificationIds.map((qualificationId) => ({ qualificationId })) }
+          ? {
+              create: qualificationIds.map((qualificationId) => ({
+                qualificationId,
+              })),
+            }
           : undefined,
       },
       include: { skills: true, qualifications: true },
@@ -56,11 +62,17 @@ export class JobRepository {
   }
 
   listActive() {
-    return prisma.job.findMany({ where: { status: "active" }, orderBy: { createdAt: "desc" } });
+    return prisma.job.findMany({
+      where: { status: "active" },
+      orderBy: { createdAt: "desc" },
+    });
   }
 
   listByPoster(postedBy: string) {
-    return prisma.job.findMany({ where: { postedBy }, orderBy: { createdAt: "desc" } });
+    return prisma.job.findMany({
+      where: { postedBy },
+      orderBy: { createdAt: "desc" },
+    });
   }
 
   listAll() {
@@ -72,7 +84,10 @@ export class JobRepository {
   }
 
   updateStatus(id: string, status: string) {
-    return prisma.job.update({ where: { id }, data: { status: status as any } });
+    return prisma.job.update({
+      where: { id },
+      data: { status: status as any },
+    });
   }
 
   delete(id: string) {

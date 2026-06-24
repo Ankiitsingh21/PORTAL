@@ -26,7 +26,13 @@ export const createRecruiter = async (
     if (existing) throw new BadRequestError("Email already registered");
 
     const user = await repo.createUserForRecruiter(tx, { email, passwordHash });
-    return repo.createRecruiterProfile(tx, { userId: user.id, name, email, createdById, industryIds });
+    return repo.createRecruiterProfile(tx, {
+      userId: user.id,
+      name,
+      email,
+      createdById,
+      industryIds,
+    });
   });
 
   // The microservices Notification handler had a case for
@@ -34,7 +40,11 @@ export const createRecruiter = async (
   // nothing ever published that event — admin.service.ts never imported
   // natsWrapper. Wiring it up here actually makes the recruiter find out
   // their own login.
-  await sendEmail(email, "Your SCN Jobs recruiter account", `Email: ${email}\nPassword: ${password}`);
+  await sendEmail(
+    email,
+    "Your SCN Jobs recruiter account",
+    `Email: ${email}\nPassword: ${password}`,
+  );
 
   return recruiter;
 };
@@ -49,11 +59,16 @@ export const getRecruiter = async (id: string) => {
 };
 
 // ───────────── Update basic info ─────────────
-export const updateRecruiter = (id: string, data: Partial<{ name: string; email: string }>) =>
-  repo.updateRecruiterInfo(id, data);
+export const updateRecruiter = (
+  id: string,
+  data: Partial<{ name: string; email: string }>,
+) => repo.updateRecruiterInfo(id, data);
 
 // ───────────── Full replace categories ─────────────
-export const replaceCategories = async (recruiterId: string, industryIds: number[]) => {
+export const replaceCategories = async (
+  recruiterId: string,
+  industryIds: number[],
+) => {
   const recruiter = await repo.findRecruiterById(recruiterId);
   if (!recruiter) throw new NotFoundError("Recruiter not found");
 
@@ -62,4 +77,5 @@ export const replaceCategories = async (recruiterId: string, industryIds: number
 };
 
 // ───────────── Activate / deactivate ─────────────
-export const setRecruiterActive = (id: string, isActive: boolean) => repo.setRecruiterActive(id, isActive);
+export const setRecruiterActive = (id: string, isActive: boolean) =>
+  repo.setRecruiterActive(id, isActive);

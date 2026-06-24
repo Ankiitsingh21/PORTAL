@@ -28,7 +28,10 @@ export class WorkerRepository {
   }
 
   setProfileComplete(userId: string, complete: boolean) {
-    return prisma.workerProfile.update({ where: { userId }, data: { profileComplete: complete } });
+    return prisma.workerProfile.update({
+      where: { userId },
+      data: { profileComplete: complete },
+    });
   }
 
   // ───────────── Junction-table replace helpers ─────────────
@@ -38,11 +41,16 @@ export class WorkerRepository {
   replaceSkills(workerId: string, skillIds: number[]) {
     return prisma.$transaction([
       prisma.workerSkill.deleteMany({ where: { workerId } }),
-      prisma.workerSkill.createMany({ data: skillIds.map((skillId) => ({ workerId, skillId })) }),
+      prisma.workerSkill.createMany({
+        data: skillIds.map((skillId) => ({ workerId, skillId })),
+      }),
     ]);
   }
 
-  replaceLanguages(workerId: string, languages: { languageId: number; proficiency?: string }[]) {
+  replaceLanguages(
+    workerId: string,
+    languages: { languageId: number; proficiency?: string }[],
+  ) {
     return prisma.$transaction([
       prisma.workerLanguage.deleteMany({ where: { workerId } }),
       prisma.workerLanguage.createMany({
@@ -76,7 +84,12 @@ export class WorkerRepository {
   // ───────────── Education ─────────────
   addEducation(
     workerId: string,
-    data: { qualificationId: number; institute?: string; passoutYear?: number; score?: string },
+    data: {
+      qualificationId: number;
+      institute?: string;
+      passoutYear?: number;
+      score?: string;
+    },
   ) {
     return prisma.workerEducation.create({ data: { workerId, ...data } });
   }

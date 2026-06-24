@@ -1,6 +1,10 @@
 import express from "express";
 import { body } from "express-validator";
-import { requireAuth, requireRole, validateRequest } from "../../common/middlewares";
+import {
+  requireAuth,
+  requireRole,
+  validateRequest,
+} from "../../common/middlewares";
 import * as ctrl from "./admin.controller";
 
 const router = express.Router();
@@ -13,31 +17,64 @@ router.post(
   [
     body("name").notEmpty().withMessage("Name is required"),
     body("email").isEmail().withMessage("Valid email required"),
-    body("password").isLength({ min: 6 }).withMessage("Password must be 6+ chars"),
-    body("industryIds").isArray({ min: 1 }).withMessage("At least one category is required"),
+    body("password")
+      .isLength({ min: 6 })
+      .withMessage("Password must be 6+ chars"),
+    body("industryIds")
+      .isArray({ min: 1 })
+      .withMessage("At least one category is required"),
   ],
   validateRequest,
   ctrl.createRecruiter,
 );
 
-router.get("/recruiters", requireAuth, requireRole("super_admin"), ctrl.listRecruiters);
+router.get(
+  "/recruiters",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.listRecruiters,
+);
 
-router.get("/recruiters/:id", requireAuth, requireRole("super_admin"), ctrl.getRecruiter);
+router.get(
+  "/recruiters/:id",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.getRecruiter,
+);
 
-router.patch("/recruiters/:id", requireAuth, requireRole("super_admin"), ctrl.updateRecruiter);
+router.patch(
+  "/recruiters/:id",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.updateRecruiter,
+);
 
 router.patch(
   "/recruiters/:id/categories",
   requireAuth,
   requireRole("super_admin"),
-  [body("industryIds").isArray({ min: 1 }).withMessage("At least one category is required")],
+  [
+    body("industryIds")
+      .isArray({ min: 1 })
+      .withMessage("At least one category is required"),
+  ],
   validateRequest,
   ctrl.replaceCategories,
 );
 
-router.patch("/recruiters/:id/deactivate", requireAuth, requireRole("super_admin"), ctrl.deactivateRecruiter);
+router.patch(
+  "/recruiters/:id/deactivate",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.deactivateRecruiter,
+);
 
-router.patch("/recruiters/:id/reactivate", requireAuth, requireRole("super_admin"), ctrl.reactivateRecruiter);
+router.patch(
+  "/recruiters/:id/reactivate",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.reactivateRecruiter,
+);
 
 // NOTE: the old `/internal/recruiter-categories/:userId` route is gone.
 // It only existed so Auth Service could fetch a recruiter's categories at
