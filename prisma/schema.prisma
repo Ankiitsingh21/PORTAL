@@ -1,0 +1,395 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────── Enums ─────────────────────────
+
+enum Role {
+  super_admin
+  recruiter
+  worker
+}
+
+enum WageType {
+  daily
+  monthly
+}
+
+enum ShiftType {
+  day
+  night
+  rotational
+}
+
+enum JobType {
+  full_time
+  part_time
+  contract
+}
+
+enum JobStatus {
+  draft
+  active
+  closed
+}
+
+enum ApplicationStatus {
+  applied
+  shortlisted
+  interview_scheduled
+  hired
+  rejected
+}
+
+enum Availability {
+  immediate
+  within_15_days
+  within_30_days
+}
+
+enum ProficiencyLevel {
+  basic
+  conversational
+  fluent
+}
+
+// ───────────────────────── Identity ─────────────────────────
+// Single Users table replaces Auth Service's DB. Every other "soft ref"
+// to a userId in the old microservices is now a real foreign key.
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  role          Role
+  phone         String?  @unique
+  phoneVerified Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  recruiter             Recruiter?                 @relation("RecruiterAccount")
+  recruitersCreated     Recruiter[]                 @relation("RecruiterCreatedBy")
+  workerProfile         WorkerProfile?
+  jobsPosted            Job[]
+  applications          Application[]               @relation("ApplicationWorker")
+  recruiterApplications Application[]               @relation("ApplicationRecruiter")
+  statusChangesMade     ApplicationStatusHistory[]
+}
+
+model Recruiter {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation("RecruiterAccount", fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  email       String
+  createdById String
+  createdBy   User     @relation("RecruiterCreatedBy", fields: [createdById], references: [id])
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categories RecruiterCategory[]
+
+  @@index([createdById])
+}
+
+model RecruiterCategory {
+  id          String    @id @default(uuid())
+  recruiterId String
+  recruiter   Recruiter @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  industryId  Int
+  industry    Industry  @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  assignedAt  DateTime  @default(now())
+
+  @@unique([recruiterId, industryId])
+  @@index([industryId])
+}
+
+// ───────────────────────── Master data ─────────────────────────
+// Same shape as the old Master Data Service, but every other model below
+// now points at these with a real FK instead of storing a bare Int.
+
+model Location {
+  id       Int     @id @default(autoincrement())
+  state    String
+  city     String
+  locality String
+  isActive Boolean @default(true)
+
+  jobs               Job[]
+  preferredByWorkers WorkerPreferredLocation[]
+
+  @@unique([state, city, locality])
+  @@index([city])
+}
+
+model Industry {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  isActive Boolean @default(true)
+
+  jobs                Job[]
+  recruiterCategories RecruiterCategory[]
+  preferredByWorkers  WorkerPreferredIndustry[]
+}
+
+model JobFunction {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  isActive Boolean @default(true)
+
+  jobRoles JobRole[]
+  jobs     Job[]
+}
+
+model JobRole {
+  id         Int          @id @default(autoincrement())
+  name       String
+  functionId Int?
+  function   JobFunction? @relation(fields: [functionId], references: [id])
+  isActive   Boolean      @default(true)
+
+  jobs Job[]
+
+  @@index([functionId])
+}
+
+model Skill {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  isActive Boolean @default(true)
+
+  workers WorkerSkill[]
+  jobs    JobSkill[]
+}
+
+model Qualification {
+  id       Int     @id @default(autoincrement())
+  name     String
+  level    String
+  isActive Boolean @default(true)
+
+  educations WorkerEducation[]
+  jobs       JobQualification[]
+}
+
+model Language {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  isActive Boolean @default(true)
+
+  workers WorkerLanguage[]
+}
+
+// ───────────────────────── Worker ─────────────────────────
+// skillIds[] / languageIds[] / preferredLocationIds[] / preferredIndustryIds[]
+// arrays from the microservices WorkerProfile are now real junction tables.
+
+model WorkerProfile {
+  id                    String        @id @default(uuid())
+  userId                String        @unique
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                  String?
+  phone                 String?
+  dob                   DateTime?
+  gender                String?
+  city                  String?
+  currentLocality       String?
+  profilePhotoUrl       String?
+  headline              String?
+  summary               String?
+  totalExperienceMonths Int           @default(0)
+  expectedSalaryMin     Int?
+  expectedSalaryMax     Int?
+  jobType               JobType?
+  availability          Availability?
+  resumeUrl             String?
+  profileComplete       Boolean       @default(false)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  education           WorkerEducation[]
+  experience          WorkerExperience[]
+  skills              WorkerSkill[]
+  languages           WorkerLanguage[]
+  preferredLocations  WorkerPreferredLocation[]
+  preferredIndustries WorkerPreferredIndustry[]
+}
+
+model WorkerEducation {
+  id              String        @id @default(uuid())
+  workerId        String
+  worker          WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  qualificationId Int
+  qualification   Qualification @relation(fields: [qualificationId], references: [id])
+  institute       String?
+  passoutYear     Int?
+  score           String?
+
+  @@index([workerId])
+  @@index([qualificationId])
+}
+
+model WorkerExperience {
+  id          String        @id @default(uuid())
+  workerId    String
+  worker      WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  companyName String
+  jobTitle    String
+  fromDate    DateTime
+  toDate      DateTime?
+  isCurrent   Boolean       @default(false)
+  description String?
+
+  @@index([workerId])
+}
+
+model WorkerSkill {
+  workerId String
+  worker   WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  skillId  Int
+  skill    Skill         @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([workerId, skillId])
+  @@index([skillId])
+}
+
+model WorkerLanguage {
+  workerId    String
+  worker      WorkerProfile     @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  languageId  Int
+  language    Language          @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  proficiency ProficiencyLevel?
+
+  @@id([workerId, languageId])
+  @@index([languageId])
+}
+
+model WorkerPreferredLocation {
+  workerId   String
+  worker     WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  locationId Int
+  location   Location      @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([workerId, locationId])
+  @@index([locationId])
+}
+
+model WorkerPreferredIndustry {
+  workerId   String
+  worker     WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  industryId Int
+  industry   Industry      @relation(fields: [industryId], references: [id], onDelete: Cascade)
+
+  @@id([workerId, industryId])
+  @@index([industryId])
+}
+
+// ───────────────────────── Job ─────────────────────────
+// skillIds[] / qualificationIds[] are now junction tables too, for the
+// same reason as WorkerProfile above — consistent, queryable, enforced.
+
+model Job {
+  id                  String       @id @default(uuid())
+  title               String
+  description         String?
+  industryId          Int
+  industry            Industry     @relation(fields: [industryId], references: [id])
+  functionId          Int?
+  function            JobFunction? @relation(fields: [functionId], references: [id])
+  jobRoleId           Int?
+  jobRole             JobRole?     @relation(fields: [jobRoleId], references: [id])
+  locationId          Int
+  location            Location     @relation(fields: [locationId], references: [id])
+  wageMin             Int?
+  wageMax             Int?
+  wageType            WageType?
+  shiftType           ShiftType?
+  jobType             JobType?
+  headcountRequired   Int
+  headcountFilled     Int          @default(0)
+  minExperienceMonths Int          @default(0)
+  status              JobStatus    @default(draft)
+  postedBy            String
+  poster              User         @relation(fields: [postedBy], references: [id])
+
+  skills         JobSkill[]
+  qualifications JobQualification[]
+  applications   Application[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([industryId])
+  @@index([postedBy])
+  @@index([status])
+  @@index([locationId])
+  @@index([functionId])
+  @@index([jobRoleId])
+}
+
+model JobSkill {
+  jobId   String
+  job     Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skillId Int
+  skill   Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([jobId, skillId])
+  @@index([skillId])
+}
+
+model JobQualification {
+  jobId           String
+  job             Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  qualificationId Int
+  qualification   Qualification @relation(fields: [qualificationId], references: [id], onDelete: Cascade)
+
+  @@id([jobId, qualificationId])
+  @@index([qualificationId])
+}
+
+// ───────────────────────── Application ─────────────────────────
+// recruiterId stays denormalized (copied from job.postedBy at apply time,
+// same as the microservices version) — it's still the cheapest way to
+// answer "does this recruiter own this application" with zero joins.
+// The difference now is it's a real FK instead of a bare string.
+
+model Application {
+  id          String            @id @default(uuid())
+  jobId       String
+  job         Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  workerId    String
+  worker      User              @relation("ApplicationWorker", fields: [workerId], references: [id])
+  recruiterId String
+  recruiter   User              @relation("ApplicationRecruiter", fields: [recruiterId], references: [id])
+  status      ApplicationStatus @default(applied)
+  coverNote   String?
+  appliedAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  history ApplicationStatusHistory[]
+
+  @@unique([jobId, workerId])
+  @@index([recruiterId])
+  @@index([workerId])
+}
+
+model ApplicationStatusHistory {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fromStatus    String?
+  toStatus      String
+  changedById   String
+  changedBy     User        @relation(fields: [changedById], references: [id])
+  notes         String?
+  changedAt     DateTime    @default(now())
+
+  @@index([applicationId])
+}
