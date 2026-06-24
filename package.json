@@ -4,13 +4,13 @@
   "main": "src/index.ts",
   "type": "commonjs",
   "scripts": {
-  "build": "tsc",
-  "start": "ts-node src/index.ts",
-  "start:dev": "ts-node-dev src/index.ts",
-  "seed:admin": "ts-node scripts/seed-admin.ts",
-  "seed:master": "ts-node scripts/seed.ts",
-  "format": "prettier --write ."
-},
+    "build": "tsc",
+    "start": "ts-node src/index.ts",
+    "start:dev": "ts-node-dev src/index.ts",
+    "seed:admin": "ts-node scripts/seed-admin.ts",
+    "seed:master": "ts-node scripts/seed.ts",
+    "format": "prettier --write ."
+  },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
@@ -24,7 +24,8 @@
     "nodemailer": "^6.10.1",
     "pg": "^8.22.0",
     "prettier": "^3.8.4",
-    "prisma": "^7.8.0"
+    "prisma": "^7.8.0",
+    "resend": "^6.14.0"
   },
   "devDependencies": {
     "@types/cookie-session": "^2.0.49",

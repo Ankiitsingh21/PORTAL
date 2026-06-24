@@ -1,45 +1,78 @@
-import nodemailer from "nodemailer";
+// import nodemailer from "nodemailer";
 
-const transporter = process.env.SMTP_HOST
-  ? nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT ?? 587),
+// const transporter = process.env.SMTP_HOST
+//   ? nodemailer.createTransport({
+//       host: process.env.SMTP_HOST,
+//       port: Number(process.env.SMTP_PORT ?? 587),
 
-      // false = STARTTLS (recommended for Gmail port 587)
-      secure: false,
+//       // false = STARTTLS (recommended for Gmail port 587)
+//       secure: false,
 
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    })
+//       auth: {
+//         user: process.env.SMTP_USER,
+//         pass: process.env.SMTP_PASS,
+//       },
+//     })
+//   : null;
+
+// export const sendEmail = async (
+//   to: string,
+//   subject: string,
+//   text: string,
+//   html?: string,
+// ) => {
+//   try {
+//     // Development mode
+//     if (!transporter) {
+//       console.log(`[DEV EMAIL] To: ${to} | Subject: ${subject}\n${text}`);
+//       return;
+//     }
+
+//     await transporter.sendMail({
+//       from: `"SCN Jobs" <${process.env.SMTP_FROM}>`,
+//       to,
+//       subject,
+//       text,
+//       html,
+//     });
+
+//     console.log(`[EMAIL SENT] To: ${to} | Subject: ${subject}`);
+//   } catch (error: any) {
+//     console.error("[EMAIL ERROR]", error.message);
+
+//     throw new Error("Failed to send email");
+//   }
+// };
+
+import { Resend } from "resend";
+
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
 export const sendEmail = async (
   to: string,
   subject: string,
   text: string,
-  html?: string,
+  html?: string
 ) => {
-  try {
-    // Development mode
-    if (!transporter) {
-      console.log(`[DEV EMAIL] To: ${to} | Subject: ${subject}\n${text}`);
-      return;
-    }
-
-    await transporter.sendMail({
-      from: `"SCN Jobs" <${process.env.SMTP_FROM}>`,
-      to,
-      subject,
-      text,
-      html,
-    });
-
-    console.log(`[EMAIL SENT] To: ${to} | Subject: ${subject}`);
-  } catch (error: any) {
-    console.error("[EMAIL ERROR]", error.message);
-
-    throw new Error("Failed to send email");
+  if (!resend) {
+    console.log(`[DEV EMAIL] To: ${to} | Subject: ${subject}\n${text}`);
+    return;
   }
+
+  const { error } = await resend.emails.send({
+    from: "SCN Jobs <onboarding@resend.dev>",  // use this until domain verified
+    to,
+    subject,
+    text,
+    html,
+  });
+
+  if (error) {
+    console.error("[EMAIL ERROR]", error.message);
+    throw new Error(error.message);
+  }
+
+  console.log(`[EMAIL SENT] To: ${to} | Subject: ${subject}`);
 };
