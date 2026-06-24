@@ -1,11 +1,5 @@
 import Redis from "ioredis";
 
-// Redis is kept for exactly one job: OTP storage with a TTL. The
-// microservices version also used it to cache Master Data reads — that
-// cache is dropped here on purpose. At ~600 workers / a handful of
-// recruiters, a straight Postgres read on dropdown data is fast enough,
-// and one less moving part means less to break before delivery. Add the
-// cache back later if traffic ever justifies it.
 export const redis = new Redis(process.env.REDIS_URL!);
 
 const OTP_TTL_SECONDS = 300; // 5 minutes
