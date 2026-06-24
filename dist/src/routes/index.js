@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const auth_routes_1 = __importDefault(require("../modules/auth/auth.routes"));
+const admin_routes_1 = __importDefault(require("../modules/admin/admin.routes"));
+const master_data_routes_1 = __importDefault(require("../modules/master-data/master-data.routes"));
+const worker_routes_1 = __importDefault(require("../modules/worker/worker.routes"));
+const job_routes_1 = __importDefault(require("../modules/job/job.routes"));
+const application_routes_1 = __importDefault(require("../modules/application/application.routes"));
+const router = express_1.default.Router();
+router.get("/health", (req, res) => res.send({ date: new Date() }));
+router.use("/auth", auth_routes_1.default);
+router.use("/admin", admin_routes_1.default);
+router.use("/master", master_data_routes_1.default);
+router.use("/worker", worker_routes_1.default);
+router.use("/jobs", job_routes_1.default);
+router.use("/applications", application_routes_1.default);
+exports.default = router;
