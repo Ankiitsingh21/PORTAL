@@ -45,7 +45,7 @@ export const registerWorker = async (
 
   // Send OTP via both SMS and email — whichever reaches the user first
   await Promise.allSettled([
-    // sendSms(phone, otp),
+    sendSms(phone, otp),
     sendEmail(
       email,
       "Your SCN Jobs OTP",
