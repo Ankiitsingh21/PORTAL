@@ -1,25 +1,49 @@
 import axios from "axios";
 
-export const sendSms = async (phone: string, otp: string) => {
+export const sendSms = async (
+  phone: string,
+  otp: string
+) => {
+
   try {
-    if (!process.env.MSG91_API_KEY) {
-      console.log(`[DEV SMS] To: ${phone} | OTP: ${otp}`);
-      return;
-    }
 
-    const response = await axios.get("https://api.msg91.com/api/v5/otp", {
+    const options = {
+      method: "POST",
+
+      url: "https://control.msg91.com/api/v5/otp",
+
       params: {
-        authkey: process.env.MSG91_API_KEY,
+        template_id: process.env.MSG91_TEMPLATE_ID,
         mobile: `91${phone}`,
-        otp: otp,
-        sender: process.env.MSG91_SENDER_ID,
-        otp_template_id: process.env.MSG91_TEMPLATE_ID,
+        authkey: process.env.MSG91_API_KEY
       },
-    });
 
-    console.log(`[SMS SENT] OTP sent to ${phone}`, response.data);
-  } catch (error: any) {
-    console.error("[SMS ERROR]", error.response?.data || error.message);
-    throw new Error("Failed to send SMS");
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      data: {
+        OTP: otp
+      }
+    };
+
+
+    const response = await axios.request(options);
+
+
+    console.log(
+      "MSG91 RESPONSE:",
+      response.data
+    );
+
+
+  } catch(error:any){
+
+    console.log(
+      "MSG91 ERROR:",
+      error.response?.data || error.message
+    );
+
   }
+
 };
