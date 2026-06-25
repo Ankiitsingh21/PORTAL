@@ -41,18 +41,18 @@ export const registerWorker = async (
   });
 
   const otp = generateOtp();
-  await storeOtp(phone, otp);
+  // await storeOtp(phone, otp);
 
   // Send OTP via both SMS and email — whichever reaches the user first
-  await Promise.allSettled([
-    sendSms(phone, otp),
-    sendEmail(
-      email,
-      "Your SCN Jobs OTP",
-      `Your OTP is: ${otp}\n\nValid for 5 minutes. Do not share this with anyone.`,
-      `<p>Your SCN Jobs OTP is: <strong style="font-size:24px">${otp}</strong></p><p>Valid for 5 minutes. Do not share this with anyone.</p>`,
-    ),
-  ]);
+  // await Promise.allSettled([
+  //   // sendSms(phone, otp),
+  //   // sendEmail(
+  //   //   email,
+  //   //   "Your SCN Jobs OTP",
+  //   //   `Your OTP is: ${otp}\n\nValid for 5 minutes. Do not share this with anyone.`,
+  //   //   `<p>Your SCN Jobs OTP is: <strong style="font-size:24px">${otp}</strong></p><p>Valid for 5 minutes. Do not share this with anyone.</p>`,
+  //   // ),
+  // ]);
 
   return {
     userId: user.id,
@@ -78,17 +78,17 @@ export const resendWorkerOtp = async (phone: string) => {
   if (!user) throw new NotFoundError("No registration found for this phone");
 
   const otp = generateOtp();
-  await storeOtp(phone, otp);
+  // await storeOtp(phone, otp);
 
-  await Promise.allSettled([
-    sendSms(phone, otp),
-    sendEmail(
-      user.email,
-      "Your SCN Jobs OTP (Resent)",
-      `Your OTP is: ${otp}\n\nValid for 5 minutes.`,
-      `<p>Your SCN Jobs OTP is: <strong style="font-size:24px">${otp}</strong></p><p>Valid for 5 minutes.</p>`,
-    ),
-  ]);
+  // await Promise.allSettled([
+  //   sendSms(phone, otp),
+  //   sendEmail(
+  //     user.email,
+  //     "Your SCN Jobs OTP (Resent)",
+  //     `Your OTP is: ${otp}\n\nValid for 5 minutes.`,
+  //     `<p>Your SCN Jobs OTP is: <strong style="font-size:24px">${otp}</strong></p><p>Valid for 5 minutes.</p>`,
+  //   ),
+  // ]);
 
   return {
     devOtp: process.env.NODE_ENV === "production" ? undefined : otp,
