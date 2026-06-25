@@ -6,7 +6,7 @@ const transporter = process.env.SMTP_HOST
       port: Number(process.env.SMTP_PORT ?? 587),
 
       // false = STARTTLS (recommended for Gmail port 587)
-      secure: false,
+      secure: true,
 
       auth: {
         user: process.env.SMTP_USER,
