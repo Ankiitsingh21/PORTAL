@@ -54,17 +54,21 @@ export const listApplicationsForJob = async (
   jobId: string,
   currentUser: { id: string; role: string },
 ) => {
-  const apps = await repo.listByJob(jobId);
-  if (
-    apps.length &&
-    currentUser.role !== "super_admin" &&
-    apps[0].recruiterId !== currentUser.id
-  ) {
+  // Look up the job itself first — this throws NotFoundError if the job
+  // doesn't exist, and gives us the real owner (job.postedBy) to check
+  // against. Previously this checked ownership against the first
+  // *application's* recruiterId, which meant a job with zero applicants
+  // skipped the ownership check entirely and returned an empty list to
+  // any recruiter, regardless of who actually posted the job.
+  const job = await jobService.getJob(jobId);
+
+  if (currentUser.role !== "super_admin" && job.postedBy !== currentUser.id) {
     throw new ForbiddenError(
       "You can only view applicants for jobs you posted",
     );
   }
-  return apps;
+
+  return repo.listByJob(jobId);
 };
 
 export const getApplication = async (
