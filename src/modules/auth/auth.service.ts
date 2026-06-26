@@ -41,7 +41,7 @@ export const registerWorker = async (
   });
 
   const otp = generateOtp();
-  // await storeOtp(phone, otp);
+  await storeOtp(phone, otp);
 
   // Send OTP via both SMS and email — whichever reaches the user first
   // await Promise.allSettled([
@@ -62,6 +62,7 @@ export const registerWorker = async (
 
 export const verifyWorkerOtp = async (phone: string, otp: string) => {
   const storedOtp = await getOtp(phone);
+  // console.log(storeOtp);
   if (!storedOtp || storedOtp !== otp) {
     throw new BadRequestError("Invalid or expired OTP");
   }

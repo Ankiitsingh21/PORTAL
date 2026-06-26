@@ -9,6 +9,7 @@ export const registerWorker = async (req: Request, res: Response) => {
 
 export const verifyWorkerOtp = async (req: Request, res: Response) => {
   const { phone, otp } = req.body;
+  // console.log(phone);
   const result = await svc.verifyWorkerOtp(phone, otp);
   req.session = { jwt: result.token };
   res.send({ success: true, data: result });
