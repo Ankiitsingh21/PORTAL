@@ -22,7 +22,7 @@ export const resendWorkerOtp = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
-  console.log(email,password);
+  // console.log(email,password);
   const result = await svc.login(email, password);
   req.session = { jwt: result.token };
   res.send({ success: true, data: result });
