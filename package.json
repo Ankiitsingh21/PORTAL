@@ -9,7 +9,8 @@
     "start:dev": "ts-node-dev src/index.ts",
     "seed:admin": "ts-node scripts/seed-admin.ts",
     "seed:master": "ts-node scripts/seed.ts",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "reset:admin-password": "ts-node scripts/reset-admin-password.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
