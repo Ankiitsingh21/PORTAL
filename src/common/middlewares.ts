@@ -9,12 +9,38 @@ import {
 } from "./errors";
 import { UserPayload } from "./types";
 
+const getRequestToken = (req: Request) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.slice("Bearer ".length).trim();
+  }
+
+  return req.session?.jwt;
+};
+
+export const loadCurrentUser = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const token = getRequestToken(req);
+  if (!token) return next();
+
+  try {
+    req.currentUser = jwt.verify(token, process.env.JWT_KEY!) as UserPayload;
+  } catch {
+    req.currentUser = undefined;
+  }
+
+  next();
+};
+
 export const requireAuth = (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const token = req.session?.jwt;
+  const token = getRequestToken(req);
   if (!token) {
     throw new NotAuthorizedError();
   }

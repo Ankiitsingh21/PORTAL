@@ -25,6 +25,7 @@ export const registerWorker = async (
   email: string,
   password: string,
   phone: string,
+  name?: string,
 ) => {
   if (await repo.findByEmail(email))
     throw new BadRequestError("Email already registered");
@@ -32,12 +33,11 @@ export const registerWorker = async (
     throw new BadRequestError("Phone already registered");
 
   const passwordHash = await Password.toHash(password);
-  const user = await repo.create({
+  const user = await repo.createWorkerAccount({
     email,
     passwordHash,
     phone,
-    role: "worker",
-    phoneVerified: false,
+    name,
   });
 
   const otp = generateOtp();
@@ -79,7 +79,7 @@ export const resendWorkerOtp = async (phone: string) => {
   if (!user) throw new NotFoundError("No registration found for this phone");
 
   const otp = generateOtp();
-  // await storeOtp(phone, otp);
+  await storeOtp(phone, otp);
 
   // await Promise.allSettled([
   //   sendSms(phone, otp),

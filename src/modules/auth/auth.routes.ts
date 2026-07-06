@@ -10,6 +10,7 @@ router.post(
   "/worker/register",
   [
     body("email").isEmail().withMessage("Valid email required"),
+    body("name").optional().trim().isLength({ min: 2 }).withMessage("Name must be 2+ chars"),
     body("password")
       .trim()
       .isLength({ min: 6 })

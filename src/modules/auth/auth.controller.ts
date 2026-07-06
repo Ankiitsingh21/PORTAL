@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import * as svc from "./auth.service";
 
 export const registerWorker = async (req: Request, res: Response) => {
-  const { email, password, phone } = req.body;
-  const result = await svc.registerWorker(email, password, phone);
+  const { email, password, phone, name } = req.body;
+  const result = await svc.registerWorker(email, password, phone, name);
   res.status(201).send({ success: true, data: result, message: "OTP sent" });
 };
 

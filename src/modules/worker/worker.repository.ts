@@ -9,6 +9,14 @@ export class WorkerRepository {
     return prisma.workerProfile.findUnique({
       where: { userId },
       include: {
+        user: {
+          select: {
+            email: true,
+            phone: true,
+            isActive: true,
+            createdAt: true,
+          },
+        },
         education: { include: { qualification: true } },
         experience: true,
         skills: { include: { skill: true } },
@@ -141,15 +149,35 @@ export class WorkerRepository {
   searchWorkers(where: Record<string, any>) {
     return prisma.workerProfile.findMany({
       where,
+      orderBy: { updatedAt: "desc" },
       select: {
         id: true,
         userId: true,
+        user: {
+          select: {
+            email: true,
+            phone: true,
+            isActive: true,
+            createdAt: true,
+          },
+        },
         name: true,
+        phone: true,
         headline: true,
+        summary: true,
         city: true,
+        currentLocality: true,
+        expectedSalaryMin: true,
+        expectedSalaryMax: true,
+        availability: true,
+        profileComplete: true,
+        profilePhotoUrl: true,
         totalExperienceMonths: true,
         resumeUrl: true,
         skills: { include: { skill: true } },
+        languages: { include: { language: true } },
+        preferredLocations: { include: { location: true } },
+        preferredIndustries: { include: { industry: true } },
       },
     });
   }
@@ -158,10 +186,20 @@ export class WorkerRepository {
     return prisma.workerProfile.findUnique({
       where: { id },
       include: {
+        user: {
+          select: {
+            email: true,
+            phone: true,
+            isActive: true,
+            createdAt: true,
+          },
+        },
         education: { include: { qualification: true } },
         experience: true,
         skills: { include: { skill: true } },
         languages: { include: { language: true } },
+        preferredLocations: { include: { location: true } },
+        preferredIndustries: { include: { industry: true } },
       },
     });
   }

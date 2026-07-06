@@ -7,12 +7,15 @@ export const createJob = async (req: Request, res: Response) => {
 };
 
 export const listJobs = async (req: Request, res: Response) => {
-  const jobs = await svc.listJobs(req.currentUser!.role, req.currentUser!.id);
+  const jobs = await svc.listJobs(req.currentUser?.role, req.currentUser?.id);
   res.send({ success: true, data: jobs });
 };
 
 export const getJob = async (req: Request, res: Response) => {
-  res.send({ success: true, data: await svc.getJob(req.params.id as string) });
+  res.send({
+    success: true,
+    data: await svc.getJobForUser(req.params.id as string, req.currentUser),
+  });
 };
 
 export const updateJob = async (req: Request, res: Response) => {

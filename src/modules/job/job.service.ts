@@ -20,6 +20,9 @@ export const createJob = async (
   const {
     title,
     description,
+    responsibilities,
+    requirements,
+    benefits,
     industryId,
     functionId,
     jobRoleId,
@@ -38,6 +41,9 @@ export const createJob = async (
   return repo.create(postedBy, {
     title,
     description,
+    responsibilities: Array.isArray(responsibilities) ? responsibilities : [],
+    requirements: Array.isArray(requirements) ? requirements : [],
+    benefits: Array.isArray(benefits) ? benefits : [],
     industryId,
     functionId,
     jobRoleId,
@@ -58,7 +64,8 @@ export const createJob = async (
 // worker -> active jobs only
 // recruiter -> only their own posted jobs
 // super_admin -> everything
-export const listJobs = async (role: string, userId: string) => {
+export const listJobs = async (role?: string, userId?: string) => {
+  if (!role || !userId) return repo.listActive();
   if (role === "worker") return repo.listActive();
   if (role === "recruiter") return repo.listByPoster(userId);
   return repo.listAll();
@@ -68,6 +75,20 @@ export const getJob = async (id: string) => {
   const job = await repo.findById(id);
   if (!job) throw new NotFoundError("Job not found");
   return job;
+};
+
+export const getJobForUser = async (
+  id: string,
+  currentUser?: { id: string; role: string },
+) => {
+  const job = await getJob(id);
+  if (job.status === "active") return job;
+  if (currentUser?.role === "super_admin") return job;
+  if (currentUser?.role === "recruiter" && job.postedBy === currentUser.id) {
+    return job;
+  }
+
+  throw new NotFoundError("Job not found");
 };
 
 const assertOwnerOrAdmin = (
@@ -107,12 +128,7 @@ export const updateJobStatus = async (
 
   const updated = await repo.updateStatus(id, newStatus);
 
-  // Same TODO as the microservices version — worker matching by
-  // industry/location was never built there either. The difference now is
-  // it'd just be a direct query + a sendEmail() call, no event bus needed.
-  if (newStatus === "active") {
-    console.log(`[DEV ONLY] Job ${id} is now active — batch notify pending`);
-  }
+  // Worker matching/notifications can be added here when that product flow is ready.
 
   return updated;
 };

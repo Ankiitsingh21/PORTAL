@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "ts-node src/index.ts",
+    "start:prod": "node dist/index.js",
     "start:dev": "ts-node-dev src/index.ts",
     "seed:admin": "ts-node scripts/seed-admin.ts",
     "seed:master": "ts-node scripts/seed.ts",

@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import * as svc from "./admin.service";
 
+export const getStats = async (req: Request, res: Response) => {
+  res.send({ success: true, data: await svc.getStats() });
+};
+
 export const createRecruiter = async (req: Request, res: Response) => {
   const { name, email, password, industryIds } = req.body;
   const recruiter = await svc.createRecruiter(

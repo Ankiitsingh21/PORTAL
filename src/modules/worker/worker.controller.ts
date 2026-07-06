@@ -96,9 +96,18 @@ export const deleteExperience = async (req: Request, res: Response) => {
 export const searchWorkers = async (req: Request, res: Response) => {
   const skillId = req.query.skillId ? Number(req.query.skillId) : undefined;
   const city = req.query.city as string | undefined;
+  const q = req.query.q as string | undefined;
+  const completeOnly = req.query.completeOnly
+    ? req.query.completeOnly !== "false"
+    : undefined;
   res.send({
     success: true,
-    data: await svc.searchWorkers(req.currentUser!, { skillId, city }),
+    data: await svc.searchWorkers(req.currentUser!, {
+      skillId,
+      city,
+      q,
+      completeOnly,
+    }),
   });
 };
 

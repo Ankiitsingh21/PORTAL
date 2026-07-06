@@ -4,6 +4,9 @@ import { WageType, ShiftType, JobType } from "../../generated/prisma/client";
 export interface CreateJobInput {
   title: string;
   description?: string;
+  responsibilities?: string[];
+  requirements?: string[];
+  benefits?: string[];
   industryId: number;
   functionId?: number;
   jobRoleId?: number;
@@ -20,6 +23,41 @@ export interface CreateJobInput {
 }
 
 export class JobRepository {
+  private jobListInclude = {
+    industry: true,
+    location: true,
+    function: true,
+    jobRole: true,
+    poster: {
+      select: {
+        id: true,
+        email: true,
+        recruiter: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    },
+    skills: {
+      include: {
+        skill: true,
+      },
+    },
+    qualifications: {
+      include: {
+        qualification: true,
+      },
+    },
+    _count: {
+      select: {
+        applications: true,
+      },
+    },
+  };
+
   create(postedBy: string, data: CreateJobInput) {
     const { skillIds, qualificationIds, ...rest } = data;
 
@@ -41,8 +79,7 @@ export class JobRepository {
           : undefined,
       },
       include: {
-        skills: true,
-        qualifications: true,
+        ...this.jobListInclude,
       },
     });
   }
@@ -51,20 +88,7 @@ export class JobRepository {
     return prisma.job.findUnique({
       where: { id },
       include: {
-        industry: true,
-        location: true,
-        function: true,
-        jobRole: true,
-        skills: {
-          include: {
-            skill: true,
-          },
-        },
-        qualifications: {
-          include: {
-            qualification: true,
-          },
-        },
+        ...this.jobListInclude,
       },
     });
   }
@@ -75,13 +99,7 @@ export class JobRepository {
       where: { status: "active" },
       orderBy: { createdAt: "desc" },
       include: {
-        industry: true,
-        location: true,
-        skills: {
-          include: {
-            skill: true,
-          },
-        },
+        ...this.jobListInclude,
       },
     });
   }
@@ -92,13 +110,7 @@ export class JobRepository {
       where: { postedBy },
       orderBy: { createdAt: "desc" },
       include: {
-        industry: true,
-        location: true,
-        skills: {
-          include: {
-            skill: true,
-          },
-        },
+        ...this.jobListInclude,
       },
     });
   }
@@ -108,13 +120,7 @@ export class JobRepository {
     return prisma.job.findMany({
       orderBy: { createdAt: "desc" },
       include: {
-        industry: true,
-        location: true,
-        skills: {
-          include: {
-            skill: true,
-          },
-        },
+        ...this.jobListInclude,
       },
     });
   }

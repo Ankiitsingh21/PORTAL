@@ -4,6 +4,79 @@ import { Prisma } from "../../generated/prisma/client";
 type Tx = Prisma.TransactionClient;
 
 export class AdminRepository {
+  async getStats() {
+    const [
+      totalRecruiters,
+      activeRecruiters,
+      inactiveRecruiters,
+      totalWorkers,
+      totalJobs,
+      activeJobs,
+      draftJobs,
+      closedJobs,
+      totalApplications,
+      appliedApplications,
+      shortlistedApplications,
+      interviewApplications,
+      hiredApplications,
+      rejectedApplications,
+      industries,
+      locations,
+      skills,
+      jobRoles,
+      languages,
+      qualifications,
+    ] = await prisma.$transaction([
+      prisma.recruiter.count(),
+      prisma.recruiter.count({ where: { isActive: true } }),
+      prisma.recruiter.count({ where: { isActive: false } }),
+      prisma.workerProfile.count(),
+      prisma.job.count(),
+      prisma.job.count({ where: { status: "active" } }),
+      prisma.job.count({ where: { status: "draft" } }),
+      prisma.job.count({ where: { status: "closed" } }),
+      prisma.application.count(),
+      prisma.application.count({ where: { status: "applied" } }),
+      prisma.application.count({ where: { status: "shortlisted" } }),
+      prisma.application.count({ where: { status: "interview_scheduled" } }),
+      prisma.application.count({ where: { status: "hired" } }),
+      prisma.application.count({ where: { status: "rejected" } }),
+      prisma.industry.count({ where: { isActive: true } }),
+      prisma.location.count({ where: { isActive: true } }),
+      prisma.skill.count({ where: { isActive: true } }),
+      prisma.jobRole.count({ where: { isActive: true } }),
+      prisma.language.count({ where: { isActive: true } }),
+      prisma.qualification.count({ where: { isActive: true } }),
+    ]);
+
+    return {
+      totalRecruiters,
+      activeRecruiters,
+      inactiveRecruiters,
+      totalWorkers,
+      totalJobs,
+      activeJobs,
+      draftJobs,
+      closedJobs,
+      totalApplications,
+      applicationsByStatus: {
+        applied: appliedApplications,
+        shortlisted: shortlistedApplications,
+        interview_scheduled: interviewApplications,
+        hired: hiredApplications,
+        rejected: rejectedApplications,
+      },
+      masterData: {
+        industries,
+        locations,
+        skills,
+        jobRoles,
+        languages,
+        qualifications,
+      },
+    };
+  }
+
   // Runs inside the createRecruiter transaction in admin.service.ts —
   // this is the one User row that used to require an HTTP call to
   // Auth Service in the microservices version.
@@ -43,13 +116,37 @@ export class AdminRepository {
   findRecruiterById(id: string) {
     return prisma.recruiter.findUnique({
       where: { id },
-      include: { categories: { include: { industry: true } }, user: true },
+      include: {
+        categories: { include: { industry: true } },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            isActive: true,
+            createdAt: true,
+            _count: { select: { jobsPosted: true } },
+          },
+        },
+      },
     });
   }
 
   listRecruiters() {
     return prisma.recruiter.findMany({
-      include: { categories: { include: { industry: true } } },
+      include: {
+        categories: { include: { industry: true } },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            isActive: true,
+            createdAt: true,
+            _count: { select: { jobsPosted: true } },
+          },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
   }

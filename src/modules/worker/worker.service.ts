@@ -189,11 +189,27 @@ export const deleteExperience = async (
 // plain join instead of a cross-service round trip. Implemented for real.
 export const searchWorkers = async (
   currentUser: { id: string; role: string },
-  filters: { skillId?: number; city?: string },
+  filters: { skillId?: number; city?: string; q?: string; completeOnly?: boolean },
 ) => {
-  const where: Record<string, any> = { profileComplete: true };
+  const where: Record<string, any> =
+    currentUser.role === "super_admin" && filters.completeOnly === false
+      ? {}
+      : { profileComplete: true };
   if (filters.skillId) where.skills = { some: { skillId: filters.skillId } };
   if (filters.city) where.city = filters.city;
+  if (filters.q) {
+    where.OR = [
+      { name: { contains: filters.q, mode: "insensitive" } },
+      { headline: { contains: filters.q, mode: "insensitive" } },
+      {
+        skills: {
+          some: {
+            skill: { name: { contains: filters.q, mode: "insensitive" } },
+          },
+        },
+      },
+    ];
+  }
 
   if (currentUser.role === "recruiter") {
     const assigned = await repo.getRecruiterAssignedIndustryIds(currentUser.id);

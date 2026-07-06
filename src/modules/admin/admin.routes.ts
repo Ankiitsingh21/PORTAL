@@ -9,6 +9,13 @@ import * as ctrl from "./admin.controller";
 
 const router = express.Router();
 
+router.get(
+  "/stats",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.getStats,
+);
+
 // ───────────── Recruiter management (super_admin only) ─────────────
 router.post(
   "/recruiters",

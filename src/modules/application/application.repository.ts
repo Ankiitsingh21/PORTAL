@@ -1,6 +1,83 @@
 import { prisma } from "../../config/db";
 
 export class ApplicationRepository {
+  private applicationInclude = {
+    job: {
+      include: {
+        industry: true,
+        location: true,
+        function: true,
+        jobRole: true,
+        poster: {
+          select: {
+            id: true,
+            email: true,
+            recruiter: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        skills: {
+          include: {
+            skill: true,
+          },
+        },
+        qualifications: {
+          include: {
+            qualification: true,
+          },
+        },
+      },
+    },
+    worker: {
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        isActive: true,
+        workerProfile: {
+          include: {
+            education: { include: { qualification: true } },
+            experience: true,
+            skills: { include: { skill: true } },
+            languages: { include: { language: true } },
+            preferredLocations: { include: { location: true } },
+            preferredIndustries: { include: { industry: true } },
+          },
+        },
+      },
+    },
+    recruiter: {
+      select: {
+        id: true,
+        email: true,
+        recruiter: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    },
+    history: {
+      orderBy: { changedAt: "asc" as const },
+      include: {
+        changedBy: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+    },
+  };
+
   findByJobAndWorker(jobId: string, workerId: string) {
     return prisma.application.findUnique({
       where: { jobId_workerId: { jobId, workerId } },
@@ -13,7 +90,10 @@ export class ApplicationRepository {
     recruiterId: string;
     coverNote?: string;
   }) {
-    return prisma.application.create({ data });
+    return prisma.application.create({
+      data,
+      include: this.applicationInclude,
+    });
   }
 
   addHistory(data: {
@@ -30,6 +110,7 @@ export class ApplicationRepository {
     return prisma.application.findMany({
       where: { workerId },
       orderBy: { appliedAt: "desc" },
+      include: this.applicationInclude,
     });
   }
 
@@ -37,16 +118,14 @@ export class ApplicationRepository {
     return prisma.application.findMany({
       where: { jobId },
       orderBy: { appliedAt: "desc" },
+      include: this.applicationInclude,
     });
   }
 
   findById(id: string) {
     return prisma.application.findUnique({
       where: { id },
-      include: {
-        history: true,
-        worker: { select: { id: true, email: true, phone: true } },
-      },
+      include: this.applicationInclude,
     });
   }
 
@@ -55,7 +134,11 @@ export class ApplicationRepository {
   }
 
   update(id: string, data: Record<string, any>) {
-    return prisma.application.update({ where: { id }, data });
+    return prisma.application.update({
+      where: { id },
+      data,
+      include: this.applicationInclude,
+    });
   }
 
   delete(id: string) {
@@ -64,10 +147,24 @@ export class ApplicationRepository {
 
   // ───────────── For Admin reporting (direct call now, no internal HTTP) ─────────────
   listByJobIds(jobIds: string[]) {
-    return prisma.application.findMany({ where: { jobId: { in: jobIds } } });
+    return prisma.application.findMany({
+      where: { jobId: { in: jobIds } },
+      include: this.applicationInclude,
+    });
   }
 
   listByRecruiter(recruiterId: string) {
-    return prisma.application.findMany({ where: { recruiterId } });
+    return prisma.application.findMany({
+      where: { recruiterId },
+      orderBy: { appliedAt: "desc" },
+      include: this.applicationInclude,
+    });
+  }
+
+  listAll() {
+    return prisma.application.findMany({
+      orderBy: { appliedAt: "desc" },
+      include: this.applicationInclude,
+    });
   }
 }

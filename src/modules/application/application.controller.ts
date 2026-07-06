@@ -10,10 +10,24 @@ export const applyToJob = async (req: Request, res: Response) => {
   res.status(201).send({ success: true, data: app });
 };
 
+export const listAllApplications = async (req: Request, res: Response) => {
+  res.send({
+    success: true,
+    data: await svc.listAllApplications(),
+  });
+};
+
 export const listMyApplications = async (req: Request, res: Response) => {
   res.send({
     success: true,
     data: await svc.listMyApplications(req.currentUser!.id),
+  });
+};
+
+export const listRecruiterApplications = async (req: Request, res: Response) => {
+  res.send({
+    success: true,
+    data: await svc.listRecruiterApplications(req.currentUser!),
   });
 };
 

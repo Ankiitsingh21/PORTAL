@@ -6,6 +6,8 @@ import { sendEmail } from "../notification/email.service";
 
 const repo = new AdminRepository();
 
+export const getStats = () => repo.getStats();
+
 // ───────────── Create recruiter ─────────────
 // Single Prisma transaction creates both the User (login) and the
 // Recruiter profile + initial categories. In microservices this was two

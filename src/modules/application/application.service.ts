@@ -50,6 +50,15 @@ export const applyToJob = async (
 export const listMyApplications = (workerId: string) =>
   repo.listByWorker(workerId);
 
+export const listAllApplications = () => repo.listAll();
+
+export const listRecruiterApplications = (
+  currentUser: { id: string; role: string },
+) => {
+  if (currentUser.role === "super_admin") return repo.listAll();
+  return repo.listByRecruiter(currentUser.id);
+};
+
 export const listApplicationsForJob = async (
   jobId: string,
   currentUser: { id: string; role: string },

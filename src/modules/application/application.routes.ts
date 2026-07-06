@@ -9,6 +9,13 @@ import * as ctrl from "./application.controller";
 
 const router = express.Router();
 
+router.get(
+  "/",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.listAllApplications,
+);
+
 router.post(
   "/",
   requireAuth,
@@ -19,6 +26,13 @@ router.post(
 );
 
 router.get("/my", requireAuth, requireRole("worker"), ctrl.listMyApplications);
+
+router.get(
+  "/recruiter",
+  requireAuth,
+  requireRole("recruiter", "super_admin"),
+  ctrl.listRecruiterApplications,
+);
 
 router.get(
   "/job/:jobId",

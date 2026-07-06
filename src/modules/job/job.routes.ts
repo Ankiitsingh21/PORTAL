@@ -1,6 +1,7 @@
 import express from "express";
 import { body } from "express-validator";
 import {
+  loadCurrentUser,
   requireAuth,
   requireRole,
   validateRequest,
@@ -27,20 +28,10 @@ router.post(
 );
 
 // ───────────── List (role-aware) ─────────────
-router.get(
-  "/",
-  requireAuth,
-  requireRole("worker", "recruiter", "super_admin"),
-  ctrl.listJobs,
-);
+router.get("/", loadCurrentUser, ctrl.listJobs);
 
 // ───────────── Single job ─────────────
-router.get(
-  "/:id",
-  requireAuth,
-  requireRole("worker", "recruiter", "super_admin"),
-  ctrl.getJob,
-);
+router.get("/:id", loadCurrentUser, ctrl.getJob);
 
 // ───────────── Edit (owner recruiter or admin) ─────────────
 router.patch(
