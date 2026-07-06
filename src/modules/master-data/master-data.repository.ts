@@ -90,4 +90,24 @@ export class MasterDataRepository {
   createQualification(name: string, level: string) {
     return prisma.qualification.create({ data: { name, level } });
   }
+
+  // NEW — added so the admin panel can edit/retire a qualification the
+  // same way it already can for job roles/industries/etc. Retiring
+  // (isActive: false) instead of hard-deleting matters here specifically
+  // because WorkerEducation and JobQualification both have a required FK
+  // to Qualification — a hard delete would either fail outright or
+  // silently orphan history rows.
+  updateQualification(
+    id: number,
+    data: Partial<{ name: string; level: string; isActive: boolean }>,
+  ) {
+    return prisma.qualification.update({ where: { id }, data });
+  }
+
+  deactivateQualification(id: number) {
+    return prisma.qualification.update({
+      where: { id },
+      data: { isActive: false },
+    });
+  }
 }

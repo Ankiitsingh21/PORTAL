@@ -214,3 +214,10 @@ export const getWorkerById = async (id: string) => {
   if (!worker) throw new NotFoundError("Worker not found");
   return worker;
 };
+
+
+export const getWorkerByUserId = async (userId: string) => {
+  const worker = await repo.findByUserIdFull(userId);
+  if (!worker) throw new NotFoundError("Worker not found");
+  return worker;
+};

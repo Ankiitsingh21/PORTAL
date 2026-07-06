@@ -26,6 +26,7 @@ export const createRecruiter = async (
     if (existing) throw new BadRequestError("Email already registered");
 
     const user = await repo.createUserForRecruiter(tx, { email, passwordHash });
+    // console.log(user);
     return repo.createRecruiterProfile(tx, {
       userId: user.id,
       name,

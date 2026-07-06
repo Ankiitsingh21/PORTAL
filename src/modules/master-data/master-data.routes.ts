@@ -119,6 +119,20 @@ router.post(
   ctrl.createQualification,
 );
 
+
+router.patch(
+  "/qualifications/:id",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.updateQualification,
+);
+router.delete(
+  "/qualifications/:id",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.deleteQualification,
+);
+
 // NOTE: the old `/test-login` dev-only route is dropped — it minted a
 // super_admin JWT with no credentials, fine for local testing inside a
 // throwaway microservice, not something that should ship in a deliverable.

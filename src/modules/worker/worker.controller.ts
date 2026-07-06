@@ -108,3 +108,10 @@ export const getWorkerById = async (req: Request, res: Response) => {
     data: await svc.getWorkerById(req.params.id as string),
   });
 };
+
+export const getWorkerByUserId = async (req: Request, res: Response) => {
+  res.send({
+    success: true,
+    data: await svc.getWorkerByUserId(req.params.userId as string),
+  });
+};

@@ -47,3 +47,8 @@ export const deleteJobRole = (id: number) => repo.deactivateJobRole(id);
 export const listQualifications = () => repo.listQualifications();
 export const createQualification = (name: string, level: string) =>
   repo.createQualification(name, level);
+// NEW
+export const updateQualification = (id: number, data: any) =>
+  repo.updateQualification(id, data);
+export const deleteQualification = (id: number) =>
+  repo.deactivateQualification(id);

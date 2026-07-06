@@ -110,3 +110,18 @@ export const createQualification = async (req: Request, res: Response) => {
       data: await svc.createQualification(req.body.name, req.body.level),
     });
 };
+
+
+export const updateQualification = async (req: Request, res: Response) => {
+  res.send({
+    success: true,
+    data: await svc.updateQualification(Number(req.params.id), req.body),
+  });
+};
+
+export const deleteQualification = async (req: Request, res: Response) => {
+  res.send({
+    success: true,
+    data: await svc.deleteQualification(Number(req.params.id)),
+  });
+};

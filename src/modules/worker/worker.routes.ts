@@ -81,4 +81,11 @@ router.get(
   ctrl.getWorkerById,
 );
 
+router.get(
+  "/by-user/:userId",
+  requireAuth,
+  requireRole("recruiter", "super_admin"),
+  ctrl.getWorkerByUserId,
+);
+
 export default router;
