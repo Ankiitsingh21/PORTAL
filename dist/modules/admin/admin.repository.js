@@ -4,7 +4,7 @@ exports.AdminRepository = void 0;
 const db_1 = require("../../config/db");
 class AdminRepository {
     async getStats() {
-        const [totalRecruiters, activeRecruiters, inactiveRecruiters, totalWorkers, totalJobs, activeJobs, draftJobs, closedJobs, totalApplications, appliedApplications, shortlistedApplications, interviewApplications, hiredApplications, rejectedApplications, industries, locations, skills, jobRoles, languages, qualifications,] = await db_1.prisma.$transaction([
+        const [totalRecruiters, activeRecruiters, inactiveRecruiters, totalWorkers, totalJobs, activeJobs, draftJobs, closedJobs, totalApplications, appliedApplications, shortlistedApplications, interviewApplications, hiredApplications, rejectedApplications, industries, locations, skills, jobRoles, languages, qualifications,] = await Promise.all([
             db_1.prisma.recruiter.count(),
             db_1.prisma.recruiter.count({ where: { isActive: true } }),
             db_1.prisma.recruiter.count({ where: { isActive: false } }),

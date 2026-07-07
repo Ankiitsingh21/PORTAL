@@ -27,7 +27,8 @@
     "pg": "^8.22.0",
     "prettier": "^3.8.4",
     "prisma": "^7.8.0",
-    "resend": "^6.14.0"
+    "resend": "^6.14.0",
+    "uploadthing": "^7.7.4"
   },
   "devDependencies": {
     "@types/cookie-session": "^2.0.49",

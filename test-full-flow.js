@@ -347,10 +347,7 @@ async function main() {
       if (!res.data?.success) throw new Error("Login failed");
     });
 
-    await step(`${name} creates a blank profile`, async () => {
-      await client.post("/worker/profile", {});
-    });
-
+    // Profile is created automatically on registration
     const location = pick(locations, i - 1);
     const industry = pick(industries, i - 1);
     const qualification = pick(qualifications, i - 1);

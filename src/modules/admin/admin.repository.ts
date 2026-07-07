@@ -26,7 +26,7 @@ export class AdminRepository {
       jobRoles,
       languages,
       qualifications,
-    ] = await prisma.$transaction([
+    ] = await Promise.all([
       prisma.recruiter.count(),
       prisma.recruiter.count({ where: { isActive: true } }),
       prisma.recruiter.count({ where: { isActive: false } }),

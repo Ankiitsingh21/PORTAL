@@ -10,6 +10,7 @@ const master_data_routes_1 = __importDefault(require("../modules/master-data/mas
 const worker_routes_1 = __importDefault(require("../modules/worker/worker.routes"));
 const job_routes_1 = __importDefault(require("../modules/job/job.routes"));
 const application_routes_1 = __importDefault(require("../modules/application/application.routes"));
+const upload_router_1 = require("../modules/upload/upload.router");
 const router = express_1.default.Router();
 router.get("/health", (req, res) => res.send({ date: new Date() }));
 router.use("/auth", auth_routes_1.default);
@@ -18,4 +19,5 @@ router.use("/master", master_data_routes_1.default);
 router.use("/worker", worker_routes_1.default);
 router.use("/jobs", job_routes_1.default);
 router.use("/applications", application_routes_1.default);
+router.use("/uploadthing", upload_router_1.uploadRoutes);
 exports.default = router;
