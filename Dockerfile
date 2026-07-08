@@ -7,4 +7,6 @@ COPY . .
 RUN npm ci
 RUN npx prisma generate
 
-CMD ["sh", "-c", "npx prisma migrate deploy && npx ts-node src/index.ts"]
+RUN npm run build
+
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]
