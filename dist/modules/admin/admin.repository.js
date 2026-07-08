@@ -111,8 +111,34 @@ class AdminRepository {
             orderBy: { createdAt: "desc" },
         });
     }
-    updateRecruiterInfo(id, data) {
-        return db_1.prisma.recruiter.update({ where: { id }, data });
+    async updateRecruiterInfo(id, data) {
+        return db_1.prisma.$transaction(async (tx) => {
+            const recruiterData = {};
+            if (data.name !== undefined)
+                recruiterData.name = data.name;
+            if (data.email !== undefined)
+                recruiterData.email = data.email;
+            if (Object.keys(recruiterData).length > 0) {
+                await tx.recruiter.update({ where: { id }, data: recruiterData });
+            }
+            const userData = {};
+            if (data.email !== undefined)
+                userData.email = data.email;
+            if (data.phone !== undefined)
+                userData.phone = data.phone;
+            if (Object.keys(userData).length > 0) {
+                await tx.user.update({ where: { id: data.userId }, data: userData });
+            }
+            if (data.industryIds?.length) {
+                await tx.recruiterCategory.deleteMany({ where: { recruiterId: id } });
+                await tx.recruiterCategory.createMany({
+                    data: data.industryIds.map((industryId) => ({
+                        recruiterId: id,
+                        industryId,
+                    })),
+                });
+            }
+        });
     }
     async replaceCategories(recruiterId, industryIds) {
         await db_1.prisma.$transaction([
@@ -138,6 +164,12 @@ class AdminRepository {
             });
             return recruiter;
         });
+    }
+    deleteRecruiterAccount(recruiterId, userId) {
+        return db_1.prisma.$transaction([
+            db_1.prisma.recruiter.delete({ where: { id: recruiterId } }),
+            db_1.prisma.user.delete({ where: { id: userId } }),
+        ]);
     }
 }
 exports.AdminRepository = AdminRepository;

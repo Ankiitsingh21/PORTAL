@@ -82,7 +82,7 @@ export class AdminRepository {
   // Auth Service in the microservices version.
   createUserForRecruiter(
     tx: Tx,
-    data: { email: string; passwordHash: string },
+    data: { email: string; phone?: string; passwordHash: string },
   ) {
     return tx.user.create({
       data: { ...data, role: "recruiter", phoneVerified: true },
@@ -151,11 +151,43 @@ export class AdminRepository {
     });
   }
 
-  updateRecruiterInfo(
+  async updateRecruiterInfo(
     id: string,
-    data: Partial<{ name: string; email: string }>,
+    data: {
+      userId: string;
+      name?: string;
+      email?: string;
+      phone?: string | null;
+      industryIds?: number[];
+    },
   ) {
-    return prisma.recruiter.update({ where: { id }, data });
+    return prisma.$transaction(async (tx) => {
+      const recruiterData: Prisma.RecruiterUpdateInput = {};
+      if (data.name !== undefined) recruiterData.name = data.name;
+      if (data.email !== undefined) recruiterData.email = data.email;
+
+      if (Object.keys(recruiterData).length > 0) {
+        await tx.recruiter.update({ where: { id }, data: recruiterData });
+      }
+
+      const userData: Prisma.UserUpdateInput = {};
+      if (data.email !== undefined) userData.email = data.email;
+      if (data.phone !== undefined) userData.phone = data.phone;
+
+      if (Object.keys(userData).length > 0) {
+        await tx.user.update({ where: { id: data.userId }, data: userData });
+      }
+
+      if (data.industryIds?.length) {
+        await tx.recruiterCategory.deleteMany({ where: { recruiterId: id } });
+        await tx.recruiterCategory.createMany({
+          data: data.industryIds.map((industryId) => ({
+            recruiterId: id,
+            industryId,
+          })),
+        });
+      }
+    });
   }
 
   async replaceCategories(recruiterId: string, industryIds: number[]) {
@@ -183,5 +215,12 @@ export class AdminRepository {
       });
       return recruiter;
     });
+  }
+
+  deleteRecruiterAccount(recruiterId: string, userId: string) {
+    return prisma.$transaction([
+      prisma.recruiter.delete({ where: { id: recruiterId } }),
+      prisma.user.delete({ where: { id: userId } }),
+    ]);
   }
 }

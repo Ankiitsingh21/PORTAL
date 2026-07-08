@@ -33,15 +33,15 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.reactivateRecruiter = exports.deactivateRecruiter = exports.replaceCategories = exports.updateRecruiter = exports.getRecruiter = exports.listRecruiters = exports.createRecruiter = exports.getStats = void 0;
+exports.reactivateRecruiter = exports.deactivateRecruiter = exports.replaceCategories = exports.deleteRecruiter = exports.updateRecruiter = exports.getRecruiter = exports.listRecruiters = exports.createRecruiter = exports.getStats = void 0;
 const svc = __importStar(require("./admin.service"));
 const getStats = async (req, res) => {
     res.send({ success: true, data: await svc.getStats() });
 };
 exports.getStats = getStats;
 const createRecruiter = async (req, res) => {
-    const { name, email, password, industryIds } = req.body;
-    const recruiter = await svc.createRecruiter(name, email, password, req.currentUser.id, industryIds);
+    const { name, email, phone, password, industryIds } = req.body;
+    const recruiter = await svc.createRecruiter(name, email, phone, password, req.currentUser.id, industryIds);
     res.status(201).send({ success: true, data: recruiter });
 };
 exports.createRecruiter = createRecruiter;
@@ -63,6 +63,13 @@ const updateRecruiter = async (req, res) => {
     });
 };
 exports.updateRecruiter = updateRecruiter;
+const deleteRecruiter = async (req, res) => {
+    res.send({
+        success: true,
+        data: await svc.deleteRecruiter(req.params.id),
+    });
+};
+exports.deleteRecruiter = deleteRecruiter;
 const replaceCategories = async (req, res) => {
     const data = await svc.replaceCategories(req.params.id, req.body.industryIds);
     res.send({ success: true, data });

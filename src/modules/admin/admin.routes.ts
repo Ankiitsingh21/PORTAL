@@ -24,12 +24,14 @@ router.post(
   [
     body("name").notEmpty().withMessage("Name is required"),
     body("email").isEmail().withMessage("Valid email required"),
+    body("phone").optional({ nullable: true, checkFalsy: true }).trim(),
     body("password")
       .isLength({ min: 6 })
       .withMessage("Password must be 6+ chars"),
     body("industryIds")
       .isArray({ min: 1 })
       .withMessage("At least one category is required"),
+    body("industryIds.*").isInt().withMessage("Category ids must be numbers"),
   ],
   validateRequest,
   ctrl.createRecruiter,
@@ -49,6 +51,13 @@ router.get(
   ctrl.getRecruiter,
 );
 
+router.delete(
+  "/recruiters/:id",
+  requireAuth,
+  requireRole("super_admin"),
+  ctrl.deleteRecruiter,
+);
+
 router.patch(
   "/recruiters/:id",
   requireAuth,
@@ -64,6 +73,7 @@ router.patch(
     body("industryIds")
       .isArray({ min: 1 })
       .withMessage("At least one category is required"),
+    body("industryIds.*").isInt().withMessage("Category ids must be numbers"),
   ],
   validateRequest,
   ctrl.replaceCategories,

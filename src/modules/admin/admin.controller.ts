@@ -6,10 +6,11 @@ export const getStats = async (req: Request, res: Response) => {
 };
 
 export const createRecruiter = async (req: Request, res: Response) => {
-  const { name, email, password, industryIds } = req.body;
+  const { name, email, phone, password, industryIds } = req.body;
   const recruiter = await svc.createRecruiter(
     name,
     email,
+    phone,
     password,
     req.currentUser!.id,
     industryIds,
@@ -32,6 +33,13 @@ export const updateRecruiter = async (req: Request, res: Response) => {
   res.send({
     success: true,
     data: await svc.updateRecruiter(req.params.id as string, req.body),
+  });
+};
+
+export const deleteRecruiter = async (req: Request, res: Response) => {
+  res.send({
+    success: true,
+    data: await svc.deleteRecruiter(req.params.id as string),
   });
 };
 

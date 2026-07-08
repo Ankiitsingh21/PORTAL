@@ -46,20 +46,24 @@ router.get("/stats", middlewares_1.requireAuth, (0, middlewares_1.requireRole)("
 router.post("/recruiters", middlewares_1.requireAuth, (0, middlewares_1.requireRole)("super_admin"), [
     (0, express_validator_1.body)("name").notEmpty().withMessage("Name is required"),
     (0, express_validator_1.body)("email").isEmail().withMessage("Valid email required"),
+    (0, express_validator_1.body)("phone").optional({ nullable: true, checkFalsy: true }).trim(),
     (0, express_validator_1.body)("password")
         .isLength({ min: 6 })
         .withMessage("Password must be 6+ chars"),
     (0, express_validator_1.body)("industryIds")
         .isArray({ min: 1 })
         .withMessage("At least one category is required"),
+    (0, express_validator_1.body)("industryIds.*").isInt().withMessage("Category ids must be numbers"),
 ], middlewares_1.validateRequest, ctrl.createRecruiter);
 router.get("/recruiters", middlewares_1.requireAuth, (0, middlewares_1.requireRole)("super_admin"), ctrl.listRecruiters);
 router.get("/recruiters/:id", middlewares_1.requireAuth, (0, middlewares_1.requireRole)("super_admin"), ctrl.getRecruiter);
+router.delete("/recruiters/:id", middlewares_1.requireAuth, (0, middlewares_1.requireRole)("super_admin"), ctrl.deleteRecruiter);
 router.patch("/recruiters/:id", middlewares_1.requireAuth, (0, middlewares_1.requireRole)("super_admin"), ctrl.updateRecruiter);
 router.patch("/recruiters/:id/categories", middlewares_1.requireAuth, (0, middlewares_1.requireRole)("super_admin"), [
     (0, express_validator_1.body)("industryIds")
         .isArray({ min: 1 })
         .withMessage("At least one category is required"),
+    (0, express_validator_1.body)("industryIds.*").isInt().withMessage("Category ids must be numbers"),
 ], middlewares_1.validateRequest, ctrl.replaceCategories);
 router.patch("/recruiters/:id/deactivate", middlewares_1.requireAuth, (0, middlewares_1.requireRole)("super_admin"), ctrl.deactivateRecruiter);
 router.patch("/recruiters/:id/reactivate", middlewares_1.requireAuth, (0, middlewares_1.requireRole)("super_admin"), ctrl.reactivateRecruiter);
