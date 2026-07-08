@@ -25,7 +25,7 @@ export const createRecruiter = async (
   const normalizedEmail = email.trim().toLowerCase();
   const normalizedPhone = phone?.trim() || undefined;
   const passwordHash = await Password.toHash(password);
-
+  console.log(normalizedEmail);
   const recruiter = await prisma.$transaction(async (tx) => {
     const existing = await tx.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) throw new BadRequestError("Email already registered");
@@ -54,15 +54,15 @@ export const createRecruiter = async (
   // nothing ever published that event — admin.service.ts never imported
   // natsWrapper. Wiring it up here actually makes the recruiter find out
   // their own login.
-  try {
-    await sendEmail(
-      normalizedEmail,
-      "Your SCN Jobs recruiter account",
-      `Email: ${normalizedEmail}\nPassword: ${password}`,
-    );
-  } catch (err) {
-    console.error("Failed to send welcome email, but recruiter was created.", err);
-  }
+  // try {
+  //   await sendEmail(
+  //     normalizedEmail,
+  //     "Your SCN Jobs recruiter account",
+  //     `Email: ${normalizedEmail}\nPassword: ${password}`,
+  //   );
+  // } catch (err) {
+  //   console.error("Failed to send welcome email, but recruiter was created.", err);
+  // }
 
   return recruiter;
 };
