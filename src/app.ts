@@ -30,7 +30,7 @@ app.use((req, res, next) => {
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
-
+  console.log("ih");
   next();
 });
 app.use(express.json());
