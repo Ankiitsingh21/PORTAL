@@ -91,6 +91,7 @@ export const resendWorkerOtp = async (phone: string) => {
 };
 
 // ───────────── Login (all roles) ─────────────
+// ───────────── Login (all roles) ─────────────
 export const login = async (email: string, password: string) => {
   const user = await repo.findByEmail(email);
   if (!user || !user.isActive) throw new BadRequestError("Invalid credentials");
@@ -106,7 +107,15 @@ export const login = async (email: string, password: string) => {
     id: user.id,
     role: user.role as UserPayload["role"],
   });
-  return { token, user: sanitize(user) };
+
+  // Reuse the same logic the dedicated /onboarding-status endpoint uses,
+  // so login and that endpoint can never disagree with each other.
+  const { needsOnboarding } = await getOnboardingStatus(
+    user.id,
+    user.role as UserPayload["role"],
+  );
+
+  return { token, user: sanitize(user), needsOnboarding };
 };
 
 // ───────────── Current user ─────────────
