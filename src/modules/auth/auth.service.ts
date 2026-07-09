@@ -54,7 +54,12 @@ export const registerWorker = async (
 
   const otp = generateOtp();
   await storeOtp(phone, otp);
-  await sendSms(phone, otp);
+  await sendEmail(
+    email,
+    "Your SCN Jobs verification code",
+    `Your OTP is ${otp}. It expires in 5 minutes.`,
+  );
+  // await sendSms(phone, otp);
 
   return {
     userId: user.id,
@@ -85,7 +90,12 @@ export const resendWorkerOtp = async (phone: string) => {
 
   const otp = generateOtp();
   await storeOtp(phone, otp);
-  await sendSms(phone, otp);
+  // await sendSms(phone, otp);
+  await sendEmail(
+    user.email,
+    "Your SCN Jobs verification code",
+    `Your OTP is ${otp}. It expires in 5 minutes.`,
+  );
 
   return {
     devOtp: process.env.NODE_ENV === "production" ? undefined : otp,
