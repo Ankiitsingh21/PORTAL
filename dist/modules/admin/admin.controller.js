@@ -41,6 +41,7 @@ const getStats = async (req, res) => {
 exports.getStats = getStats;
 const createRecruiter = async (req, res) => {
     const { name, email, phone, password, industryIds } = req.body;
+    console.log(name);
     const recruiter = await svc.createRecruiter(name, email, phone, password, req.currentUser.id, industryIds);
     res.status(201).send({ success: true, data: recruiter });
 };

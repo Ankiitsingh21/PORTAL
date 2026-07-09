@@ -14,8 +14,8 @@
     "reset:admin-password": "ts-node scripts/reset-admin-password.ts"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "prisma": "6.15.0",
+    "@prisma/client": "6.15.0",
     "axios": "^1.18.0",
     "cookie-session": "^2.1.1",
     "dotenv": "^17.4.2",
@@ -26,7 +26,6 @@
     "nodemailer": "^6.10.1",
     "pg": "^8.22.0",
     "prettier": "^3.8.4",
-    "prisma": "^7.8.0",
     "resend": "^6.14.0",
     "uploadthing": "^7.7.4"
   },

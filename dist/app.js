@@ -11,28 +11,33 @@ const middlewares_1 = require("./common/middlewares");
 const app = (0, express_1.default)();
 exports.app = app;
 app.set("trust proxy", true);
+// CORS - Allow all frontend origins
 app.use((req, res, next) => {
-    const configuredOrigins = (process.env.CORS_ORIGIN ??
-        process.env.FRONTEND_URL ??
-        "http://localhost:3001,http://localhost:3002,http://localhost:3003")
-        .split(",")
-        .map((origin) => origin.trim())
-        .filter(Boolean);
-    const requestOrigin = req.headers.origin;
-    const allowAnyOrigin = configuredOrigins.includes("*");
-    if (requestOrigin && (allowAnyOrigin || configuredOrigins.includes(requestOrigin))) {
-        res.header("Access-Control-Allow-Origin", requestOrigin);
+    const origin = req.headers.origin;
+    // Reflect any requesting origin
+    if (origin) {
+        res.header("Access-Control-Allow-Origin", origin);
         res.header("Vary", "Origin");
     }
     res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    // Reflect whatever headers the browser's preflight is asking permission
+    // for (same idea as reflecting Origin above), instead of a fixed list.
+    // A hard-coded list broke UploadThing's client, which sends its own
+    // x-uploadthing-package / x-uploadthing-version / tracing headers that
+    // weren't in the old fixed list — those failed preflight and the browser
+    // silently refused to send the real request.
+    const requestedHeaders = req.headers["access-control-request-headers"];
+    res.header("Access-Control-Allow-Headers", requestedHeaders || "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     if (req.method === "OPTIONS") {
         return res.sendStatus(204);
     }
     next();
 });
 app.use(express_1.default.json());
-app.use((0, cookie_session_1.default)({ signed: false, secure: false }));
+app.use((0, cookie_session_1.default)({
+    signed: false,
+    secure: false,
+}));
 app.use("/api", index_1.default);
 app.use(middlewares_1.errorHandler);

@@ -5,7 +5,6 @@ const db_1 = require("../../config/db");
 const admin_repository_1 = require("./admin.repository");
 const password_1 = require("../../utils/password");
 const errors_1 = require("../../common/errors");
-const email_service_1 = require("../notification/email.service");
 const repo = new admin_repository_1.AdminRepository();
 const getStats = () => repo.getStats();
 exports.getStats = getStats;
@@ -19,6 +18,7 @@ const createRecruiter = async (name, email, phone, password, createdById, indust
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedPhone = phone?.trim() || undefined;
     const passwordHash = await password_1.Password.toHash(password);
+    console.log(normalizedEmail);
     const recruiter = await db_1.prisma.$transaction(async (tx) => {
         const existing = await tx.user.findUnique({ where: { email: normalizedEmail } });
         if (existing)
@@ -47,12 +47,15 @@ const createRecruiter = async (name, email, phone, password, createdById, indust
     // nothing ever published that event — admin.service.ts never imported
     // natsWrapper. Wiring it up here actually makes the recruiter find out
     // their own login.
-    try {
-        await (0, email_service_1.sendEmail)(normalizedEmail, "Your SCN Jobs recruiter account", `Email: ${normalizedEmail}\nPassword: ${password}`);
-    }
-    catch (err) {
-        console.error("Failed to send welcome email, but recruiter was created.", err);
-    }
+    // try {
+    //   await sendEmail(
+    //     normalizedEmail,
+    //     "Your SCN Jobs recruiter account",
+    //     `Email: ${normalizedEmail}\nPassword: ${password}`,
+    //   );
+    // } catch (err) {
+    //   console.error("Failed to send welcome email, but recruiter was created.", err);
+    // }
     return recruiter;
 };
 exports.createRecruiter = createRecruiter;

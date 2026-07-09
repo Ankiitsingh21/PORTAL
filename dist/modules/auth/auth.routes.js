@@ -63,6 +63,7 @@ router.post("/login", [
 ], middlewares_1.validateRequest, ctrl.login);
 router.post("/logout", ctrl.logout);
 router.get("/me", middlewares_1.requireAuth, ctrl.me);
+router.get("/onboarding-status", middlewares_1.requireAuth, ctrl.getOnboardingStatus);
 // NOTE: the old `/internal/create-user` route is gone — Admin Service used
 // to call it over HTTP to create a recruiter's login. In the monolith,
 // admin.service creates the User row directly inside the same Prisma

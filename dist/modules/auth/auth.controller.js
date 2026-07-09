@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.me = exports.logout = exports.login = exports.resendWorkerOtp = exports.verifyWorkerOtp = exports.registerWorker = void 0;
+exports.getOnboardingStatus = exports.me = exports.logout = exports.login = exports.resendWorkerOtp = exports.verifyWorkerOtp = exports.registerWorker = void 0;
 const svc = __importStar(require("./auth.service"));
 const registerWorker = async (req, res) => {
     const { email, password, phone, name } = req.body;
@@ -76,3 +76,8 @@ const me = async (req, res) => {
     res.send({ success: true, data: user });
 };
 exports.me = me;
+const getOnboardingStatus = async (req, res) => {
+    const result = await svc.getOnboardingStatus(req.currentUser.id, req.currentUser.role);
+    res.send({ success: true, data: result });
+};
+exports.getOnboardingStatus = getOnboardingStatus;

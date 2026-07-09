@@ -40,6 +40,16 @@ class AuthRepository {
         return db_1.prisma.user.update({
             where: { phone },
             data: { phoneVerified: true },
+            // Pull the name saved on WorkerProfile at registration so the
+            // service layer can split it into firstName/lastName for the
+            // verify-otp response.
+            include: { workerProfile: { select: { name: true } } },
+        });
+    }
+    findWorkerProfileCompletion(userId) {
+        return db_1.prisma.workerProfile.findUnique({
+            where: { userId },
+            select: { profileComplete: true },
         });
     }
 }

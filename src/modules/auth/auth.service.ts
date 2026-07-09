@@ -54,6 +54,7 @@ export const registerWorker = async (
 
   const otp = generateOtp();
   await storeOtp(phone, otp);
+  await sendSms(phone, otp);
 
   return {
     userId: user.id,
@@ -84,6 +85,7 @@ export const resendWorkerOtp = async (phone: string) => {
 
   const otp = generateOtp();
   await storeOtp(phone, otp);
+  await sendSms(phone, otp);
 
   return {
     devOtp: process.env.NODE_ENV === "production" ? undefined : otp,

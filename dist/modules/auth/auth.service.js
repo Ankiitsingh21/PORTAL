@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCurrentUser = exports.login = exports.resendWorkerOtp = exports.verifyWorkerOtp = exports.registerWorker = void 0;
+exports.getOnboardingStatus = exports.getCurrentUser = exports.login = exports.resendWorkerOtp = exports.verifyWorkerOtp = exports.registerWorker = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const auth_repository_1 = require("./auth.repository");
 const password_1 = require("../../utils/password");
@@ -13,8 +13,20 @@ const repo = new auth_repository_1.AuthRepository();
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 const signToken = (payload) => jsonwebtoken_1.default.sign(payload, process.env.JWT_KEY);
 const sanitize = (user) => {
-    const { passwordHash, ...rest } = user;
+    const { passwordHash, workerProfile, ...rest } = user;
     return rest;
+};
+// Registration only ever collects a single "name" field (WorkerProfile.name).
+// verify-otp needs firstName/lastName separately, so split it here instead
+// of touching the registration flow at all.
+const splitName = (fullName) => {
+    if (!fullName || !fullName.trim())
+        return { firstName: "", lastName: "" };
+    const parts = fullName.trim().split(/\s+/);
+    return {
+        firstName: parts[0],
+        lastName: parts.length > 1 ? parts.slice(1).join(" ") : "",
+    };
 };
 // ───────────── Worker registration + OTP ─────────────
 const registerWorker = async (email, password, phone, name) => {
@@ -31,16 +43,6 @@ const registerWorker = async (email, password, phone, name) => {
     });
     const otp = generateOtp();
     await (0, redis_1.storeOtp)(phone, otp);
-    // Send OTP via both SMS and email — whichever reaches the user first
-    // await Promise.allSettled([
-    //   // sendSms(phone, otp),
-    //   // sendEmail(
-    //   //   email,
-    //   //   "Your SCN Jobs OTP",
-    //   //   `Your OTP is: ${otp}\n\nValid for 5 minutes. Do not share this with anyone.`,
-    //   //   `<p>Your SCN Jobs OTP is: <strong style="font-size:24px">${otp}</strong></p><p>Valid for 5 minutes. Do not share this with anyone.</p>`,
-    //   // ),
-    // ]);
     return {
         userId: user.id,
         devOtp: process.env.NODE_ENV === "production" ? undefined : otp,
@@ -49,14 +51,14 @@ const registerWorker = async (email, password, phone, name) => {
 exports.registerWorker = registerWorker;
 const verifyWorkerOtp = async (phone, otp) => {
     const storedOtp = await (0, redis_1.getOtp)(phone);
-    // console.log(storeOtp);
     if (!storedOtp || storedOtp !== otp) {
         throw new errors_1.BadRequestError("Invalid or expired OTP");
     }
     const user = await repo.markPhoneVerified(phone);
     await (0, redis_1.clearOtp)(phone);
     const token = signToken({ id: user.id, role: "worker" });
-    return { token, user: sanitize(user) };
+    const { firstName, lastName } = splitName(user.workerProfile?.name);
+    return { token, user: sanitize(user), firstName, lastName };
 };
 exports.verifyWorkerOtp = verifyWorkerOtp;
 const resendWorkerOtp = async (phone) => {
@@ -65,24 +67,13 @@ const resendWorkerOtp = async (phone) => {
         throw new errors_1.NotFoundError("No registration found for this phone");
     const otp = generateOtp();
     await (0, redis_1.storeOtp)(phone, otp);
-    // await Promise.allSettled([
-    //   sendSms(phone, otp),
-    //   sendEmail(
-    //     user.email,
-    //     "Your SCN Jobs OTP (Resent)",
-    //     `Your OTP is: ${otp}\n\nValid for 5 minutes.`,
-    //     `<p>Your SCN Jobs OTP is: <strong style="font-size:24px">${otp}</strong></p><p>Valid for 5 minutes.</p>`,
-    //   ),
-    // ]);
     return {
         devOtp: process.env.NODE_ENV === "production" ? undefined : otp,
     };
 };
 exports.resendWorkerOtp = resendWorkerOtp;
 // ───────────── Login (all roles) ─────────────
-// No more fetching the recruiter's categories from Admin Service over HTTP
-// at login time — categories are checked live wherever they're needed
-// (job.middlewares.categoryGuard, worker.service.searchWorkers) via a join.
+// ───────────── Login (all roles) ─────────────
 const login = async (email, password) => {
     const user = await repo.findByEmail(email);
     if (!user || !user.isActive)
@@ -97,7 +88,10 @@ const login = async (email, password) => {
         id: user.id,
         role: user.role,
     });
-    return { token, user: sanitize(user) };
+    // Reuse the same logic the dedicated /onboarding-status endpoint uses,
+    // so login and that endpoint can never disagree with each other.
+    const { needsOnboarding } = await (0, exports.getOnboardingStatus)(user.id, user.role);
+    return { token, user: sanitize(user), needsOnboarding };
 };
 exports.login = login;
 // ───────────── Current user ─────────────
@@ -108,3 +102,20 @@ const getCurrentUser = async (id) => {
     return sanitize(user);
 };
 exports.getCurrentUser = getCurrentUser;
+// ───────────── Onboarding status ─────────────
+// Driven off WorkerProfile.profileComplete — the same flag worker.service
+// already flips to true once name/phone/resume/skills are all filled in.
+//   - no profile row yet      -> needsOnboarding: true
+//   - profile incomplete      -> needsOnboarding: true
+//   - profile marked complete -> needsOnboarding: false, forever, until
+//     something makes it incomplete again.
+const getOnboardingStatus = async (userId, role) => {
+    if (role !== "worker") {
+        return { needsOnboarding: false };
+    }
+    const profile = await repo.findWorkerProfileCompletion(userId);
+    if (!profile)
+        return { needsOnboarding: true };
+    return { needsOnboarding: !profile.profileComplete };
+};
+exports.getOnboardingStatus = getOnboardingStatus;

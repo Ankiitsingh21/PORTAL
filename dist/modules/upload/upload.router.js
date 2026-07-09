@@ -7,6 +7,7 @@ exports.uploadRoutes = exports.uploadRouter = void 0;
 const express_1 = __importDefault(require("express"));
 const express_2 = require("uploadthing/express");
 const express_3 = require("uploadthing/express");
+// import { requireAuth } from "../../common/middlewares";
 const middlewares_1 = require("../../common/middlewares");
 const db_1 = require("../../config/db");
 const f = (0, express_2.createUploadthing)();
@@ -35,6 +36,6 @@ exports.uploadRouter = {
 };
 const router = express_1.default.Router();
 exports.uploadRoutes = router;
-router.use("/", middlewares_1.requireAuth, (0, express_3.createRouteHandler)({
+router.use("/", middlewares_1.loadCurrentUser, (0, express_3.createRouteHandler)({
     router: exports.uploadRouter
 }));
