@@ -96,7 +96,6 @@ export const resendWorkerOtp = async (phone: string) => {
   //   "Your SCN Jobs verification code",
   //   `Your OTP is ${otp}. It expires in 5 minutes.`,
   // );
-
   return {
     devOtp: process.env.NODE_ENV === "production" ? otp : otp,
   };
