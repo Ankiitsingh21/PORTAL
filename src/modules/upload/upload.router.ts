@@ -1,7 +1,8 @@
 import express from 'express';
 import { createUploadthing, type FileRouter } from "uploadthing/express";
 import { createRouteHandler } from "uploadthing/express";
-import { requireAuth } from "../../common/middlewares";
+// import { requireAuth } from "../../common/middlewares";
+import { loadCurrentUser } from "../../common/middlewares";
 import { prisma } from "../../config/db";
 
 const f = createUploadthing();
@@ -32,7 +33,7 @@ export const uploadRouter = {
 
 const router = express.Router();
 
-router.use("/", requireAuth, createRouteHandler({
+router.use("/", loadCurrentUser, createRouteHandler({
   router: uploadRouter
 }));
 
