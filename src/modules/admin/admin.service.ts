@@ -63,15 +63,15 @@ export const createRecruiter = async (
   // } catch (err) {
   //   console.error("Failed to send welcome email, but recruiter was created.", err);
   // }
-  try {
-    await sendEmail(
-      normalizedEmail,
-      "Your SCN Jobs recruiter account",
-      `Email: ${normalizedEmail}\nPassword: ${password}`,
-    );
-  } catch (err) {
-    console.error("Failed to send welcome email, but recruiter was created.", err);
-  }
+  // try {
+  //   await sendEmail(
+  //     normalizedEmail,
+  //     "Your SCN Jobs recruiter account",
+  //     `Email: ${normalizedEmail}\nPassword: ${password}`,
+  //   );
+  // } catch (err) {
+  //   console.error("Failed to send welcome email, but recruiter was created.", err);
+  // }
 
   return recruiter;
 };
