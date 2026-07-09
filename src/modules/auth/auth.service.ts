@@ -16,8 +16,20 @@ const signToken = (payload: UserPayload) =>
   jwt.sign(payload, process.env.JWT_KEY!);
 
 const sanitize = (user: any) => {
-  const { passwordHash, ...rest } = user;
+  const { passwordHash, workerProfile, ...rest } = user;
   return rest;
+};
+
+// Registration only ever collects a single "name" field (WorkerProfile.name).
+// verify-otp needs firstName/lastName separately, so split it here instead
+// of touching the registration flow at all.
+const splitName = (fullName?: string | null) => {
+  if (!fullName || !fullName.trim()) return { firstName: "", lastName: "" };
+  const parts = fullName.trim().split(/\s+/);
+  return {
+    firstName: parts[0],
+    lastName: parts.length > 1 ? parts.slice(1).join(" ") : "",
+  };
 };
 
 // ───────────── Worker registration + OTP ─────────────
@@ -43,17 +55,6 @@ export const registerWorker = async (
   const otp = generateOtp();
   await storeOtp(phone, otp);
 
-  // Send OTP via both SMS and email — whichever reaches the user first
-  // await Promise.allSettled([
-  //   // sendSms(phone, otp),
-  //   // sendEmail(
-  //   //   email,
-  //   //   "Your SCN Jobs OTP",
-  //   //   `Your OTP is: ${otp}\n\nValid for 5 minutes. Do not share this with anyone.`,
-  //   //   `<p>Your SCN Jobs OTP is: <strong style="font-size:24px">${otp}</strong></p><p>Valid for 5 minutes. Do not share this with anyone.</p>`,
-  //   // ),
-  // ]);
-
   return {
     userId: user.id,
     devOtp: process.env.NODE_ENV === "production" ? undefined : otp,
@@ -62,7 +63,6 @@ export const registerWorker = async (
 
 export const verifyWorkerOtp = async (phone: string, otp: string) => {
   const storedOtp = await getOtp(phone);
-  // console.log(storeOtp);
   if (!storedOtp || storedOtp !== otp) {
     throw new BadRequestError("Invalid or expired OTP");
   }
@@ -71,7 +71,11 @@ export const verifyWorkerOtp = async (phone: string, otp: string) => {
   await clearOtp(phone);
 
   const token = signToken({ id: user.id, role: "worker" });
-  return { token, user: sanitize(user) };
+  const { firstName, lastName } = splitName(
+    (user as any).workerProfile?.name,
+  );
+
+  return { token, user: sanitize(user), firstName, lastName };
 };
 
 export const resendWorkerOtp = async (phone: string) => {
@@ -81,25 +85,12 @@ export const resendWorkerOtp = async (phone: string) => {
   const otp = generateOtp();
   await storeOtp(phone, otp);
 
-  // await Promise.allSettled([
-  //   sendSms(phone, otp),
-  //   sendEmail(
-  //     user.email,
-  //     "Your SCN Jobs OTP (Resent)",
-  //     `Your OTP is: ${otp}\n\nValid for 5 minutes.`,
-  //     `<p>Your SCN Jobs OTP is: <strong style="font-size:24px">${otp}</strong></p><p>Valid for 5 minutes.</p>`,
-  //   ),
-  // ]);
-
   return {
     devOtp: process.env.NODE_ENV === "production" ? undefined : otp,
   };
 };
 
 // ───────────── Login (all roles) ─────────────
-// No more fetching the recruiter's categories from Admin Service over HTTP
-// at login time — categories are checked live wherever they're needed
-// (job.middlewares.categoryGuard, worker.service.searchWorkers) via a join.
 export const login = async (email: string, password: string) => {
   const user = await repo.findByEmail(email);
   if (!user || !user.isActive) throw new BadRequestError("Invalid credentials");
@@ -123,4 +114,22 @@ export const getCurrentUser = async (id: string) => {
   const user = await repo.findById(id);
   if (!user || !user.isActive) return null;
   return sanitize(user);
+};
+
+// ───────────── Onboarding status ─────────────
+// Driven off WorkerProfile.profileComplete — the same flag worker.service
+// already flips to true once name/phone/resume/skills are all filled in.
+//   - no profile row yet      -> needsOnboarding: true
+//   - profile incomplete      -> needsOnboarding: true
+//   - profile marked complete -> needsOnboarding: false, forever, until
+//     something makes it incomplete again.
+export const getOnboardingStatus = async (userId: string, role: string) => {
+  if (role !== "worker") {
+    return { needsOnboarding: false };
+  }
+
+  const profile = await repo.findWorkerProfileCompletion(userId);
+  if (!profile) return { needsOnboarding: true };
+
+  return { needsOnboarding: !profile.profileComplete };
 };

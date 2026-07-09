@@ -41,3 +41,11 @@ export const me = async (req: Request, res: Response) => {
   }
   res.send({ success: true, data: user });
 };
+
+export const getOnboardingStatus = async (req: Request, res: Response) => {
+  const result = await svc.getOnboardingStatus(
+    req.currentUser!.id,
+    req.currentUser!.role,
+  );
+  res.send({ success: true, data: result });
+};
