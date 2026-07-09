@@ -22,9 +22,16 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, PATCH, DELETE, OPTIONS"
   );
+  // Reflect whatever headers the browser's preflight is asking permission
+  // for (same idea as reflecting Origin above), instead of a fixed list.
+  // A hard-coded list broke UploadThing's client, which sends its own
+  // x-uploadthing-package / x-uploadthing-version / tracing headers that
+  // weren't in the old fixed list — those failed preflight and the browser
+  // silently refused to send the real request.
+  const requestedHeaders = req.headers["access-control-request-headers"];
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    requestedHeaders || "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
 
   if (req.method === "OPTIONS") {
