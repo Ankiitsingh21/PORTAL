@@ -7,7 +7,7 @@ export const getStats = async (req: Request, res: Response) => {
 
 export const createRecruiter = async (req: Request, res: Response) => {
   const { name, email, phone, password, industryIds } = req.body;
-  console.log(name);
+  // console.log(name);
   const recruiter = await svc.createRecruiter(
     name,
     email,
